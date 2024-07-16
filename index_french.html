@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practicar Idioma</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: rgb(30, 30, 30);
+        }
+        .card {
+            min-width: 300px;
+            width: auto;
+            max-width: 100%;
+            text-align: center;
+        }
+        .word {
+            font-size: 1.5em;
+        }
+        .tense1 {
+            font-size: 4em;
+        }
+        .tense2 {
+            color: gray;
+        }
+        #myTab {
+            position: fixed;
+            top: 0;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+        .list-group {
+            max-height: 60vh;
+            overflow-y: auto;
+        }   
+        
+        #hint {
+            position: fixed;
+            width: 50vw;
+            height: 50vh;
+            display: none;
+            background-color: white;
+            color: black;
+            z-index: 10;
+            
+        }
+        #hintText {
+            font-size: 1em;
+        }
+
+        pre {
+            white-space: pre-wrap; /* Wraps text inside the pre element */
+            word-wrap: break-word;  /* Allows long words to break and wrap to the next line */
+        }
+    </style>
+</head>
+<body>
+    <div id="hint"> <pre id="hintText"></pre><button class="btn btn-success mt-3" id="close" onclick="closeHint()">close</button></div>
+    <div class="container mt-5 ">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="vocabulary-tab" data-toggle="tab" href="#vocabulary" role="tab" aria-controls="vocabulary" aria-selected="true">Vocabulary</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="verbs-tab" data-toggle="tab" href="#verbs" role="tab" aria-controls="verbs" aria-selected="false">Verbs</a>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="vocabulary" role="tabpanel" aria-labelledby="vocabulary-tab">
+                <div class="list-group mt-3" id="wordLists"></div>
+                <div class="card shadow-sm mt-3" id="wordCard" style="display: none;">
+                    <div class="card-body">
+                        <p class="word tense1" id="currentWord"></p>
+                        <p class="word tense2" id="translation" style="display: none;"></p>
+                        <button class="btn btn-info mb-2" onclick="verifyWord()">Verify</button>
+                        <button class="btn btn-success mb-2" onclick="markWord('OK')">OK</button>
+                        <button class="btn btn-danger mb-2" onclick="markWord('KO')">KO</button>
+                        <p id="progress"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="verbs" role="tabpanel" aria-labelledby="verbs-tab">
+                <span class="timer" style="color: white;">Time: <span id="timer">60</span> seconds - </span>
+                <span class="score" style="color: white;">Score: <span id="score">0</span></span>
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body">
+                        <p class="word tense1" id="randomVerb"></p>
+                        <p class="word tense1" id="randomTense"></p>
+                        <p class="word tense1" id="randomNegative"></p>
+                        <p class="word tense2" id="tense2Verb"></p>
+                        <button id="nextBtn" class="btn btn-primary" style="display: none;" onclick="NextVerb()">Next Verb</button>
+                        <button id="hintBtn" class="btn" style="display: none;" onclick="showHint()">Hint</button>
+                    </div>
+                </div>
+                <button class="btn btn-success mt-3" id="startBtn" onclick="startGame()">Start Game</button>
+                <button class="btn btn-danger mt-3" id="resetBtn" onclick="resetGame()" style="display: none;">Reset Game</button>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+const pronouns = ["je", "tu", "il", "elle", "nous", "vous", "ils", "elles"];
+
+const  tenses = [
+{ "name": "présent", "hint": "1er groupe: je parle, tu parles, il/elle/on parle, nous parlons, vous parlez, ils/elles parlent\n\n2ème groupe: je finis, tu finis, il/elle/on finit, nous finissons, vous finissez, ils/elles finissent\n\n3ème groupe: je vends, tu vends, il/elle/on vend, nous vendons, vous vendez, ils/elles vendent" },
+{ "name": "imparfait", "hint": "1er groupe: je parlais, tu parlais, il/elle/on parlait, nous parlions, vous parliez, ils/elles parlaient\n\n2ème groupe: je finissais, tu finissais, il/elle/on finissait, nous finissions, vous finissiez, ils/elles finissaient\n\n3ème groupe: je vendais, tu vendais, il/elle/on vendait, nous vendions, vous vendiez, ils/elles vendaient" },
+{ "name": "passé simple", "hint": "1er groupe: je parlai, tu parlas, il/elle/on parla, nous parlâmes, vous parlâtes, ils/elles parlèrent\n\n2ème groupe: je finis, tu finis, il/elle/on finit, nous finîmes, vous finîtes, ils/elles finirent\n\n3ème groupe: je vendis, tu vendis, il/elle/on vendit, nous vendîmes, vous vendîtes, ils/elles vendirent" },
+{ "name": "futur simple", "hint": "1er groupe: je parlerai, tu parleras, il/elle/on parlera, nous parlerons, vous parlerez, ils/elles parleront\n\n2ème groupe: je finirai, tu finiras, il/elle/on finira, nous finirons, vous finirez, ils/elles finiront\n\n3ème groupe: je vendrai, tu vendras, il/elle/on vendra, nous vendrons, vous vendrez, ils/elles vendront" },
+{ "name": "passé composé", "hint": "1er groupe: j'ai parlé, tu as parlé, il/elle/on a parlé, nous avons parlé, vous avez parlé, ils/elles ont parlé\n\n2ème groupe: j'ai fini, tu as fini, il/elle/on a fini, nous avons fini, vous avez fini, ils/elles ont fini\n\n3ème groupe: j'ai vendu, tu as vendu, il/elle/on a vendu, nous avons vendu, vous avez vendu, ils/elles ont vendu" },
+{ "name": "plus-que-parfait", "hint": "1er groupe: j'avais parlé, tu avais parlé, il/elle/on avait parlé, nous avions parlé, vous aviez parlé, ils/elles avaient parlé\n\n2ème groupe: j'avais fini, tu avais fini, il/elle/on avait fini, nous avions fini, vous aviez fini, ils/elles avaient fini\n\n3ème groupe: j'avais vendu, tu avais vendu, il/elle/on avait vendu, nous avions vendu, vous aviez vendu, ils/elles avaient vendu" },
+{ "name": "conditionnel présent", "hint": "1er groupe: je parlerais, tu parlerais, il/elle/on parlerait, nous parlerions, vous parleriez, ils/elles parleraient\n\n2ème groupe: je finirais, tu finirais, il/elle/on finirait, nous finirions, vous finiriez, ils/elles finiraient\n\n3ème groupe: je vendrais, tu vendrais, il/elle/on vendrait, nous vendrions, vous vendriez, ils/elles vendraient" },
+{ "name": "conditionnel passé", "hint": "1er groupe: j'aurais parlé, tu aurais parlé, il/elle/on aurait parlé, nous aurions parlé, vous auriez parlé, ils/elles auraient parlé\n\n2ème groupe: j'aurais fini, tu aurais fini, il/elle/on aurait fini, nous aurions fini, vous auriez fini, ils/elles auraient fini\n\n3ème groupe: j'aurais vendu, tu aurais vendu, il/elle/on aurait vendu, nous aurions vendu, vous auriez vendu, ils/elles auraient vendu" },
+{ "name": "présent du subjonctif", "hint": "1er groupe: que je parle, que tu parles, qu'il/elle/on parle, que nous parlions, que vous parliez, qu'ils/elles parlent\n\n2ème groupe: que je finisse, que tu finisses, qu'il/elle/on finisse, que nous finissions, que vous finissiez, qu'ils/elles finissent\n\n3ème groupe: que je vende, que tu vendes, qu'il/elle/on vende, que nous vendions, que vous vendiez, qu'ils/elles vendent" },
+{ "name": "impératif", "hint": "1er groupe: (tu) parle, (nous) parlons, (vous) parlez\n\n2ème groupe: (tu) finis, (nous) finissons, (vous) finissez\n\n3ème groupe: (tu) vends, (nous) vendons, (vous) vendez" },
+{ "name": "infinitif", "hint": "1er groupe: parler\n\n2ème groupe: finir\n\n3ème groupe: vendre" },
+{ "name": "gérondif", "hint": "1er groupe: en parlant\n\n2ème groupe: en finissant\n\n3ème groupe: en vendant" }
+];
+
+const verbs = [
+{ "tense1": "Encontrar", "tense2": "Trouver" },
+{ "tense1": "Dar", "tense2": "Donner" },
+{ "tense1": "Hablar", "tense2": "Parler" },
+{ "tense1": "Amar", "tense2": "Aimer" },
+{ "tense1": "Pasar", "tense2": "Passer" },
+{ "tense1": "Preguntar", "tense2": "Demander" },
+{ "tense1": "Parecer", "tense2": "Sembler" },
+{ "tense1": "Dejar", "tense2": "Laisser" },
+{ "tense1": "Quedar", "tense2": "Rester" },
+{ "tense1": "Pensar", "tense2": "Penser" },
+{ "tense1": "Mirar", "tense2": "Regarder" },
+{ "tense1": "Llegar", "tense2": "Arriver" },
+{ "tense1": "Buscar", "tense2": "Chercher" },
+{ "tense1": "Llevar", "tense2": "Porter" },
+{ "tense1": "Entrar", "tense2": "Entrer" },
+{ "tense1": "Llamar", "tense2": "Appeler" },
+{ "tense1": "Caer", "tense2": "Tomber" },
+{ "tense1": "Comenzar", "tense2": "Commencer" },
+{ "tense1": "Mostrar", "tense2": "Montrer" },
+{ "tense1": "Parar", "tense2": "Arrêter" },
+{ "tense1": "Lanzar", "tense2": "Jeter" },
+{ "tense1": "Subir", "tense2": "Monter" },
+{ "tense1": "Levantar", "tense2": "Lever" },
+{ "tense1": "Escuchar", "tense2": "Écouter" },
+{ "tense1": "Continuar", "tense2": "Continuer" },
+{ "tense1": "Añadir", "tense2": "Ajouter" },
+{ "tense1": "Jugar", "tense2": "Jouer" },
+{ "tense1": "Andar", "tense2": "Marcher" },
+{ "tense1": "Guardar", "tense2": "Garder" },
+{ "tense1": "Faltar", "tense2": "Manquer" },
+{ "tense1": "Encontrar de nuevo", "tense2": "Retrouver" },
+{ "tense1": "Recordar", "tense2": "Rappeler" },
+{ "tense1": "Girar", "tense2": "Tourner" },
+{ "tense1": "Gritar", "tense2": "Crier" },
+{ "tense1": "Soñar", "tense2": "Songer" },
+{ "tense1": "Presentar", "tense2": "Présenter" },
+{ "tense1": "Existir", "tense2": "Exister" },
+{ "tense1": "Enviar", "tense2": "Envoyer" },
+{ "tense1": "Explicar", "tense2": "Expliquer" },
+{ "tense1": "Comer", "tense2": "Manger" },
+{ "tense1": "Terminar", "tense2": "Finir" },
+{ "tense1": "Actuar", "tense2": "Agir" },
+{ "tense1": "Ser o Estar", "tense2": "Être" },
+{ "tense1": "Tener", "tense2": "Avoir" },
+{ "tense1": "Hacer", "tense2": "Faire" },
+{ "tense1": "Decir", "tense2": "Dire" },
+{ "tense1": "Poder", "tense2": "Pouvoir" },
+{ "tense1": "Ir", "tense2": "Aller" },
+{ "tense1": "Ver", "tense2": "Voir" },
+{ "tense1": "Saber", "tense2": "Savoir" },
+{ "tense1": "Querer", "tense2": "Vouloir" },
+{ "tense1": "Venir", "tense2": "Venir" },
+{ "tense1": "Ser necesario", "tense2": "Falloir" },
+{ "tense1": "Deber", "tense2": "Devoir" },
+{ "tense1": "Creer", "tense2": "Croire" },
+{ "tense1": "Tomar", "tense2": "Prendre" },
+{ "tense1": "Poner", "tense2": "Mettre" },
+{ "tense1": "Sostener", "tense2": "Tenir" },
+{ "tense1": "Oír", "tense2": "Entendre" },
+{ "tense1": "Responder", "tense2": "Répondre" },
+{ "tense1": "Devolver", "tense2": "Rendre" },
+{ "tense1": "Conocer", "tense2": "Connaître" },
+{ "tense1": "Parecer", "tense2": "Paraître" },
+{ "tense1": "Sentir", "tense2": "Sentir" },
+{ "tense1": "Esperar", "tense2": "Attendre" },
+{ "tense1": "Vivir", "tense2": "Vivre" },
+{ "tense1": "Oler", "tense2": "Sentir" },
+{ "tense1": "Comprender", "tense2": "Comprendre" },
+{ "tense1": "Convertirse en", "tense2": "Devenir" },
+{ "tense1": "Retener", "tense2": "Retenir" },
+{ "tense1": "Escribir", "tense2": "Écrire" },
+{ "tense1": "Retomar", "tense2": "Reprendre" },
+{ "tense1": "Seguir", "tense2": "Suivre" },
+{ "tense1": "Partir", "tense2": "Partir" },
+{ "tense1": "Morir", "tense2": "Mourir" },
+{ "tense1": "Abrir", "tense2": "Ouvrir" },
+{ "tense1": "Leer", "tense2": "Lire" },
+{ "tense1": "Servir", "tense2": "Servir" },
+{ "tense1": "Recibir", "tense2": "Recevoir" },
+{ "tense1": "Perder", "tense2": "Perdre" },
+{ "tense1": "Sonreír", "tense2": "Sourire" },
+{ "tense1": "Percibir", "tense2": "Apercevoir" },
+{ "tense1": "Reconocer", "tense2": "Reconnaître" },
+{ "tense1": "Bajar", "tense2": "Descendre" },
+{ "tense1": "Correr", "tense2": "Courir" },
+{ "tense1": "Permitir", "tense2": "Permettre" },
+{ "tense1": "Ofrecer", "tense2": "Offrir" },
+{ "tense1": "Aprender", "tense2": "Apprendre" },
+{ "tense1": "Sufrir", "tense2": "Souffrir" }
+];           
+
+ const words = [
+{ "tense1": "Uno", "tense2": "Un" },
+{ "tense1": "Dos", "tense2": "Deux" },
+{ "tense1": "Tres", "tense2": "Trois" },
+{ "tense1": "Cuatro", "tense2": "Quatre" },
+{ "tense1": "Cinco", "tense2": "Cinq" },
+{ "tense1": "Seis", "tense2": "Six" },
+{ "tense1": "Siete", "tense2": "Sept" },
+{ "tense1": "Ocho", "tense2": "Huit" },
+{ "tense1": "Nueve", "tense2": "Neuf" },
+{ "tense1": "Diez", "tense2": "Dix" },
+{ "tense1": "Veinte", "tense2": "Vingt" },
+{ "tense1": "Treinta", "tense2": "Trente" },
+{ "tense1": "Cuarenta", "tense2": "Quarante" },
+{ "tense1": "Cincuenta", "tense2": "Cinquante" },
+{ "tense1": "Sesenta", "tense2": "Soixante" },
+{ "tense1": "Setenta", "tense2": "Soixante-dix" },
+{ "tense1": "Ochenta", "tense2": "Quatre-vingts" },
+{ "tense1": "Noventa", "tense2": "Quatre-vingt-dix" },
+{ "tense1": "Cien", "tense2": "Cent" },
+{ "tense1": "Suma", "tense2": "Addition" },
+{ "tense1": "Resta", "tense2": "Soustraction" },
+{ "tense1": "Multiplicación", "tense2": "Multiplication" },
+{ "tense1": "División", "tense2": "Division" },
+{ "tense1": "Encontrar", "tense2": "Trouver" },
+{ "tense1": "Dar", "tense2": "Donner" },
+{ "tense1": "Hablar", "tense2": "Parler" },
+{ "tense1": "Amar", "tense2": "Aimer" },
+{ "tense1": "Pasar", "tense2": "Passer" },
+{ "tense1": "Preguntar", "tense2": "Demander" },
+{ "tense1": "Parecer", "tense2": "Sembler" },
+{ "tense1": "Dejar", "tense2": "Laisser" },
+{ "tense1": "Quedar", "tense2": "Rester" },
+{ "tense1": "Pensar", "tense2": "Penser" },
+{ "tense1": "Mirar", "tense2": "Regarder" },
+{ "tense1": "Llegar", "tense2": "Arriver" },
+{ "tense1": "Buscar", "tense2": "Chercher" },
+{ "tense1": "Llevar", "tense2": "Porter" },
+{ "tense1": "Entrar", "tense2": "Entrer" },
+{ "tense1": "Llamar", "tense2": "Appeler" },
+{ "tense1": "Caer", "tense2": "Tomber" },
+{ "tense1": "Comenzar", "tense2": "Commencer" },
+{ "tense1": "Mostrar", "tense2": "Montrer" },
+{ "tense1": "Parar", "tense2": "Arrêter" },
+{ "tense1": "Lanzar", "tense2": "Jeter" },
+{ "tense1": "Subir", "tense2": "Monter" },
+{ "tense1": "Levantar", "tense2": "Lever" },
+{ "tense1": "Escuchar", "tense2": "Écouter" },
+{ "tense1": "Continuar", "tense2": "Continuer" },
+{ "tense1": "Añadir", "tense2": "Ajouter" },
+{ "tense1": "Jugar", "tense2": "Jouer" },
+{ "tense1": "Andar", "tense2": "Marcher" },
+{ "tense1": "Guardar", "tense2": "Garder" },
+{ "tense1": "Faltar", "tense2": "Manquer" },
+{ "tense1": "Encontrar de nuevo", "tense2": "Retrouver" },
+{ "tense1": "Recordar", "tense2": "Rappeler" },
+{ "tense1": "Girar", "tense2": "Tourner" },
+{ "tense1": "Gritar", "tense2": "Crier" },
+{ "tense1": "Soñar", "tense2": "Songer" },
+{ "tense1": "Presentar", "tense2": "Présenter" },
+{ "tense1": "Existir", "tense2": "Exister" },
+{ "tense1": "Enviar", "tense2": "Envoyer" },
+{ "tense1": "Explicar", "tense2": "Expliquer" },
+{ "tense1": "Comer", "tense2": "Manger" },
+{ "tense1": "Terminar", "tense2": "Finir" },
+{ "tense1": "Actuar", "tense2": "Agir" },
+{ "tense1": "Ser o Estar", "tense2": "Être" },
+{ "tense1": "Tener", "tense2": "Avoir" },
+{ "tense1": "Hacer", "tense2": "Faire" },
+{ "tense1": "Decir", "tense2": "Dire" },
+{ "tense1": "Poder", "tense2": "Pouvoir" },
+{ "tense1": "Ir", "tense2": "Aller" },
+{ "tense1": "Ver", "tense2": "Voir" },
+{ "tense1": "Saber", "tense2": "Savoir" },
+{ "tense1": "Querer", "tense2": "Vouloir" },
+{ "tense1": "Venir", "tense2": "Venir" },
+{ "tense1": "Ser necesario", "tense2": "Falloir" },
+{ "tense1": "Deber", "tense2": "Devoir" },
+{ "tense1": "Creer", "tense2": "Croire" },
+{ "tense1": "Tomar", "tense2": "Prendre" },
+{ "tense1": "Poner", "tense2": "Mettre" },
+{ "tense1": "Sostener", "tense2": "Tenir" },
+{ "tense1": "Oír", "tense2": "Entendre" },
+{ "tense1": "Responder", "tense2": "Répondre" },
+{ "tense1": "Devolver", "tense2": "Rendre" },
+{ "tense1": "Conocer", "tense2": "Connaître" },
+{ "tense1": "Parecer", "tense2": "Paraître" },
+{ "tense1": "Sentir", "tense2": "Sentir" },
+{ "tense1": "Esperar", "tense2": "Attendre" },
+{ "tense1": "Vivir", "tense2": "Vivre" },
+{ "tense1": "Oler", "tense2": "Sentir" },
+{ "tense1": "Comprender", "tense2": "Comprendre" },
+{ "tense1": "Convertirse en", "tense2": "Devenir" },
+{ "tense1": "Retener", "tense2": "Retenir" },
+{ "tense1": "Escribir", "tense2": "Écrire" },
+{ "tense1": "Retomar", "tense2": "Reprendre" },
+{ "tense1": "Seguir", "tense2": "Suivre" },
+{ "tense1": "Partir", "tense2": "Partir" },
+{ "tense1": "Morir", "tense2": "Mourir" },
+{ "tense1": "Abrir", "tense2": "Ouvrir" },
+{ "tense1": "Leer", "tense2": "Lire" },
+{ "tense1": "Servir", "tense2": "Servir" },
+{ "tense1": "Recibir", "tense2": "Recevoir" },
+{ "tense1": "Perder", "tense2": "Perdre" },
+{ "tense1": "Sonreír", "tense2": "Sourire" },
+{ "tense1": "Percibir", "tense2": "Apercevoir" },
+{ "tense1": "Reconocer", "tense2": "Reconnaître" },
+{ "tense1": "Bajar", "tense2": "Descendre" },
+{ "tense1": "Correr", "tense2": "Courir" },
+{ "tense1": "Permitir", "tense2": "Permettre" },
+{ "tense1": "Ofrecer", "tense2": "Offrir" },
+{ "tense1": "Aprender", "tense2": "Apprendre" },
+{ "tense1": "Sufrir", "tense2": "Souffrir" },
+{"tense1": "Ahora", "tense2": "Maintenant" },
+{ "tense1": "Ayer", "tense2": "Hier" },
+{ "tense1": "Hoy", "tense2": "Aujourd'hui" },
+{ "tense1": "Mañana", "tense2": "Demain" },
+{ "tense1": "Pronto", "tense2": "Bientôt" },
+{ "tense1": "Temprano", "tense2": "Tôt" },
+{ "tense1": "Tarde", "tense2": "Tard" },
+{ "tense1": "Antiguamente", "tense2": "Jadis" },
+{ "tense1": "Antes", "tense2": "Autrefois" },
+{ "tense1": "Mucho tiempo", "tense2": "Longtemps" },
+{ "tense1": "Siempre", "tense2": "Toujours" },
+{ "tense1": "Nunca", "tense2": "Jamais" },
+{ "tense1": "A menudo", "tense2": "Souvent" },
+{ "tense1": "Raramente", "tense2": "Rarement" },
+{ "tense1": "A veces", "tense2": "Parfois" },
+{ "tense1": "Frecuentemente", "tense2": "Fréquemment" },
+{ "tense1": "Ocasionalmente", "tense2": "Occasionnellement" },
+{ "tense1": "Regularmente", "tense2": "Régulièrement" },
+{ "tense1": "Primero", "tense2": "D'abord" },
+{ "tense1": "Después", "tense2": "Ensuite" },
+{ "tense1": "Antes", "tense2": "Avant" },
+{ "tense1": "Luego", "tense2": "Puis" },
+{ "tense1": "Por fin", "tense2": "Enfin" },
+{ "tense1": "Ya", "tense2": "Déjà" },
+{ "tense1": "Todavía", "tense2": "Encore" },
+{ "tense1": "Tan pronto como sea posible", "tense2": "Dès que possible" },
+{ "tense1": "En el futuro", "tense2": "À l'avenir" },
+{ "tense1": "Dentro de poco", "tense2": "Tout à l'heure" },
+{ "tense1": "En cualquier momento", "tense2": "À tout moment" },
+{ "tense1": "Aquí", "tense2": "Ici" },
+{ "tense1": "Allí", "tense2": "Là" },
+{ "tense1": "Allá", "tense2": "Là-bas" },
+{ "tense1": "Cerca", "tense2": "Près" },
+{ "tense1": "Lejos", "tense2": "Loin" },
+{ "tense1": "Por todas partes", "tense2": "Partout" },
+{ "tense1": "En ningún lugar", "tense2": "Nulle part" },
+{ "tense1": "En otro lugar", "tense2": "Ailleurs" },
+{ "tense1": "Dentro", "tense2": "Dedans" },
+{ "tense1": "Fuera", "tense2": "Dehors" },
+{ "tense1": "Arriba", "tense2": "En haut" },
+{ "tense1": "Abajo", "tense2": "En bas" },
+{ "tense1": "Sobre", "tense2": "Au-dessus" },
+{ "tense1": "Debajo", "tense2": "Au-dessous" },
+{ "tense1": "Al lado", "tense2": "À côté" },
+{ "tense1": "Entre", "tense2": "Entre" },
+{ "tense1": "Delante", "tense2": "Devant" },
+{ "tense1": "Atrás", "tense2": "Derrière" },
+{ "tense1": "Al frente", "tense2": "À l'avant" },
+{ "tense1": "En la parte trasera", "tense2": "À l'arrière" },
+{ "tense1": "A la derecha", "tense2": "À droite" },
+{ "tense1": "A la izquierda", "tense2": "À gauche" },
+{ "tense1": "Enfrente", "tense2": "En face" },
+{ "tense1": "Por detrás", "tense2": "Par derrière" },
+{ "tense1": "En el medio", "tense2": "Au milieu" },
+{ "tense1": "En la esquina", "tense2": "Au coin" },
+{ "tense1": "Arriba a la derecha", "tense2": "En haut à droite" },
+{ "tense1": "Arriba a la izquierda", "tense2": "En haut à gauche" },
+{ "tense1": "Abajo a la derecha", "tense2": "En bas à droite" },
+{ "tense1": "Abajo a la izquierda", "tense2": "En bas à gauche" },
+{ "tense1": "Rápidamente", "tense2": "Rapidement" },
+{ "tense1": "Suavemente", "tense2": "Doucement" },
+{ "tense1": "Despacio", "tense2": "Lentement" },
+{ "tense1": "Bruscamente", "tense2": "Brusquement" },
+{ "tense1": "Delicadamente", "tense2": "Délicatement" },
+{ "tense1": "Orgullosamente", "tense2": "Fièrement" },
+{ "tense1": "Torpe", "tense2": "Maladroitement" },
+{ "tense1": "Hábilmente", "tense2": "Habilement" },
+{ "tense1": "Silenciosamente", "tense2": "Silencieusement" },
+{ "tense1": "Furtivamente", "tense2": "Furtivement" },
+{ "tense1": "Claramente", "tense2": "Clairment" },
+{ "tense1": "Oscuramente", "tense2": "Obscurément" },
+{ "tense1": "Simplemente", "tense2": "Simplement" },
+{ "tense1": "Completamente", "tense2": "Complètement" },
+{ "tense1": "Parcialmente", "tense2": "Partiellement" },
+{ "tense1": "Dolorosamente", "tense2": "Péniblement" },
+{ "tense1": "Fácilmente", "tense2": "Facilement" },
+{ "tense1": "Prudentemente", "tense2": "Prudemment" },
+{ "tense1": "Imprudentemente", "tense2": "Imprudemment" },
+{ "tense1": "Energéticamente", "tense2": "Énergiquement" },
+{ "tense1": "Débilmente", "tense2": "Faiblement" },
+{ "tense1": "Fuertemente", "tense2": "Fortement" },
+{ "tense1": "Valientemente", "tense2": "Courageusement" },
+{ "tense1": "Cruelmente", "tense2": "Cruellement" },
+{ "tense1": "Generosamente", "tense2": "Généreusement" },
+{ "tense1": "Egoístamente", "tense2": "Égoïstement" },
+{ "tense1": "Al azar", "tense2": "Aléatoirement" },
+{ "tense1": "Conscientemente", "tense2": "Consciencieusement" },
+{ "tense1": "Inconscientemente", "tense2": "Inconsciemment" },
+{ "tense1": "Voluntariamente", "tense2": "Volontairement" },
+{ "tense1": "Mucho", "tense2": "Beaucoup" },
+{ "tense1": "Poco", "tense2": "Peu" },
+{ "tense1": "Más", "tense2": "Plus" },
+{ "tense1": "Menos", "tense2": "Moins" },
+{ "tense1": "Muy", "tense2": "Très" },
+{ "tense1": "Bastante", "tense2": "Assez" },
+{ "tense1": "Demasiado", "tense2": "Trop" },
+{ "tense1": "Tan", "tense2": "Tellement" },
+{ "tense1": "Tanto", "tense2": "Autant" },
+{ "tense1": "Todo", "tense2": "Tout" },
+{ "tense1": "Nada", "tense2": "Rien" },
+{ "tense1": "Algo", "tense2": "Quelque chose" },
+{ "tense1": "Nada en absoluto", "tense2": "Rien du tout" },
+{ "tense1": "Absolutamente", "tense2": "Absolument" },
+{ "tense1": "Parcialmente", "tense2": "Partiellement" },
+{ "tense1": "Completamente", "tense2": "Complètement" },
+{ "tense1": "Prácticamente", "tense2": "Presque" },
+{ "tense1": "Apróximadamente", "tense2": "Approximativement" },
+{ "tense1": "Principalmente", "tense2": "Principalement" },
+{ "tense1": "Especialmente", "tense2": "Surtout" },
+{ "tense1": "Bastante", "tense2": "Aussi" },
+{ "tense1": "Más", "tense2": "Encore" },
+{ "tense1": "Más aún", "tense2": "Encore plus" },
+{ "tense1": "Incluso", "tense2": "Même" },
+{ "tense1": "Justo", "tense2": "Juste" },
+{ "tense1": "Apenas", "tense2": "À peine" },
+{ "tense1": "Casi", "tense2": "À peu près" },
+{ "tense1": "Jamás", "tense2": "Jamais" },
+{ "tense1": "Nadie", "tense2": "Personne" },
+{ "tense1": "A ninguno", "tense2": "Aucun" },
+{ "tense1": "Nulo", "tense2": "Nul" },
+{ "tense1": "Ningún lugar", "tense2": "Nulle part" },
+{ "tense1": "De ninguna manera", "tense2": "Nullement" },
+{ "tense1": "No", "tense2": "Non" },
+{ "tense1": "Tampoco", "tense2": "Non plus" },
+{ "tense1": "Ni", "tense2": "Ni" },
+{ "tense1": "Para nada", "tense2": "Point" },
+{ "tense1": "Nunca", "tense2": "Nulle part" },
+{ "tense1": "En ningún caso", "tense2": "Aucunement" },
+{ "tense1": "hermoso/a", "tense2": "beau" },
+{ "tense1": "grande", "tense2": "grand" },
+{ "tense1": "pequeño/a", "tense2": "petit" },
+{ "tense1": "bueno/a", "tense2": "bon" },
+{ "tense1": "malo/a", "tense2": "mauvais" },
+{ "tense1": "nuevo/a", "tense2": "nouveau" },
+{ "tense1": "viejo/a", "tense2": "vieux" },
+{ "tense1": "joven", "tense2": "jeune" },
+{ "tense1": "fuerte", "tense2": "fort" },
+{ "tense1": "débil", "tense2": "faible" },
+{ "tense1": "amable", "tense2": "gentil" },
+{ "tense1": "malo/a (malvado/a)", "tense2": "méchant" },
+{ "tense1": "rico/a", "tense2": "riche" },
+{ "tense1": "pobre", "tense2": "pauvre" },
+{ "tense1": "feliz", "tense2": "heureux" },
+{ "tense1": "triste", "tense2": "triste" },
+{ "tense1": "fácil", "tense2": "facile" },
+{ "tense1": "difícil", "tense2": "difficile" },
+{ "tense1": "rápido/a", "tense2": "rapide" },
+{ "tense1": "lento/a", "tense2": "lent" },
+{ "tense1": "ligero/a", "tense2": "léger" },
+{ "tense1": "pesado/a", "tense2": "lourd" },
+{ "tense1": "limpio/a", "tense2": "propre" },
+{ "tense1": "sucio/a", "tense2": "sale" },
+{ "tense1": "caliente", "tense2": "chaud" },
+{ "tense1": "frío/a", "tense2": "froid" },
+{ "tense1": "seco/a", "tense2": "sec" },
+{ "tense1": "mojado/a", "tense2": "mouillé" },
+{ "tense1": "suave/dulce", "tense2": "doux" },
+{ "tense1": "amargo/a", "tense2": "amer" },
+{ "tense1": "mi", "tense2": "mon" },
+{ "tense1": "tu", "tense2": "ton" },
+{ "tense1": "su (de él/ella)", "tense2": "son" },
+{ "tense1": "nuestro/a", "tense2": "notre" },
+{ "tense1": "vuestro/a", "tense2": "votre" },
+{ "tense1": "su (de ellos/as)", "tense2": "leur" },
+{ "tense1": "mis", "tense2": "mes" },
+{ "tense1": "tus", "tense2": "tes" },
+{ "tense1": "sus (de él/ella)", "tense2": "ses" },
+{ "tense1": "nuestros/as", "tense2": "nos" },
+{ "tense1": "vuestros/as", "tense2": "vos" },
+{ "tense1": "sus (de ellos/as)", "tense2": "leurs" },
+{ "tense1": "uno/a", "tense2": "un" },
+{ "tense1": "un/una", "tense2": "une" },
+{ "tense1": "alguno/a", "tense2": "quelque" },
+{ "tense1": "todo/a", "tense2": "tout" },
+{ "tense1": "otro/a", "tense2": "autre" },
+{ "tense1": "algunos/as", "tense2": "certains" },
+{ "tense1": "cada", "tense2": "chaque" },
+{ "tense1": "cierto/a", "tense2": "certain" },
+{ "tense1": "todos/as", "tense2": "tous" },
+{ "tense1": "varios/as", "tense2": "plusieurs" },
+{ "tense1": "nadie", "tense2": "nul" },
+{ "tense1": "nulo/a", "tense2": "nul" },
+{ "tense1": "alguien", "tense2": "quelqu'un" },
+{ "tense1": "algo", "tense2": "quelque chose" },
+{ "tense1": "cada uno/a", "tense2": "chacun" },
+{ "tense1": "cualquiera", "tense2": "n'importe qui" },
+{ "tense1": "cualquier cosa", "tense2": "n'importe quoi" },
+{ "tense1": "otro/a", "tense2": "autrui" },
+{ "tense1": "en ninguna parte", "tense2": "nul part" },
+{ "tense1": "en cualquier lugar", "tense2": "n'importe où" },
+{ "tense1": "en cualquier momento", "tense2": "n'importe quand" },
+{ "tense1": "cualquier", "tense2": "n'importe quel" },
+{ "tense1": "cualquier uno/a", "tense2": "n'importe lequel" },
+{ "tense1": "¿qué?", "tense2": "quel" },
+{ "tense1": "¿cuáles?", "tense2": "quels" },
+{ "tense1": "¿cuál?", "tense2": "quelle" },
+{ "tense1": "¿cuáles?", "tense2": "quelles" },
+{ "tense1": "¿cuánto?", "tense2": "combien" },
+{ "tense1": "¿cómo?", "tense2": "comment" },
+{ "tense1": "¿por qué?", "tense2": "pourquoi" },
+{ "tense1": "¿dónde?", "tense2": "où" },
+{ "tense1": "¿cuándo?", "tense2": "quand" },
+{ "tense1": "¿quién?", "tense2": "qui" },
+{ "tense1": "¿qué?", "tense2": "qu'est-ce que" },
+{ "tense1": "¿qué?", "tense2": "qu'est-ce qui" },
+{ "tense1": "¿qué es esto?", "tense2": "qu'est-ce que c'est" },
+{ "tense1": "¿cuántos años?", "tense2": "quel âge" },
+{ "tense1": "¿qué día?", "tense2": "quel jour" },
+{ "tense1": "¿qué hora?", "tense2": "quelle heure" },
+{ "tense1": "¿qué tiempo?", "tense2": "quel temps" },
+{ "tense1": "¿qué color?", "tense2": "quelle couleur" },
+{ "tense1": "¿qué tamaño?", "tense2": "quelle taille" },
+{ "tense1": "¿qué cantidad?", "tense2": "quelle quantité" },
+{ "tense1": "¡qué lástima!", "tense2": "quel dommage" },
+{ "tense1": "¡qué suerte!", "tense2": "quelle chance" },
+{ "tense1": "¡qué asombro!", "tense2": "quel étonnement" },
+{ "tense1": "¡qué alegría!", "tense2": "quelle joie" },
+{ "tense1": "¡qué felicidad!", "tense2": "quel bonheur" },
+{ "tense1": "¡qué sorpresa!", "tense2": "quelle surprise" },
+{ "tense1": "¡qué placer!", "tense2": "quel plaisir" },
+{ "tense1": "¡qué maravilla!", "tense2": "quelle merveille" },
+{ "tense1": "¡qué catástrofe!", "tense2": "quelle catastrophe" },
+{ "tense1": "grande", "tense2": "grand" },
+{ "tense1": "pequeño/a", "tense2": "petit" },
+{ "tense1": "enorme", "tense2": "énorme" },
+{ "tense1": "minúsculo/a", "tense2": "minuscule" },
+{ "tense1": "inmenso/a", "tense2": "immense" },
+{ "tense1": "estrecho/a", "tense2": "étroit" },
+{ "tense1": "ancho/a", "tense2": "large" },
+{ "tense1": "alto/a", "tense2": "haut" },
+{ "tense1": "bajo/a", "tense2": "bas" },
+{ "tense1": "largo/a", "tense2": "long" },
+{ "tense1": "azul", "tense2": "bleu" },
+{ "tense1": "rojo", "tense2": "rouge" },
+{ "tense1": "verde", "tense2": "vert" },
+{ "tense1": "amarillo", "tense2": "jaune" },
+{ "tense1": "naranja", "tense2": "orange" },
+{ "tense1": "violeta", "tense2": "violet" },
+{ "tense1": "rosa", "tense2": "rose" },
+{ "tense1": "marrón", "tense2": "marron" },
+{ "tense1": "gris", "tense2": "gris" },
+{ "tense1": "blanco", "tense2": "blanc" },
+{ "tense1": "pan", "tense2": "pain" },
+{ "tense1": "queso", "tense2": "fromage" },
+{ "tense1": "carne", "tense2": "viande" },
+{ "tense1": "pescado", "tense2": "poisson" },
+{ "tense1": "verdura", "tense2": "légume" },
+{ "tense1": "fruta", "tense2": "fruits" },
+{ "tense1": "arroz", "tense2": "riz" },
+{ "tense1": "pasta", "tense2": "pâtes" },
+{ "tense1": "sopa", "tense2": "soupe" },
+{ "tense1": "sándwich", "tense2": "sandwich" },
+{ "tense1": "cruasán", "tense2": "croissant" },
+{ "tense1": "baguette", "tense2": "baguette" },
+{ "tense1": "ensalada", "tense2": "salade" },
+{ "tense1": "bistec", "tense2": "steak" },
+{ "tense1": "salchicha", "tense2": "saucisse" },
+{ "tense1": "crepa", "tense2": "crêpe" },
+{ "tense1": "pizza", "tense2": "pizza" },
+{ "tense1": "pollo", "tense2": "poulet" },
+{ "tense1": "hamburguesa", "tense2": "burger" },
+{ "tense1": "papas fritas", "tense2": "frites" },
+{ "tense1": "pastelería", "tense2": "pâtisserie" },
+{ "tense1": "yogur", "tense2": "yaourt" },
+{ "tense1": "huevo", "tense2": "œuf" },
+{ "tense1": "jamón", "tense2": "jambon" },
+{ "tense1": "salmón", "tense2": "saumon" },
+{ "tense1": "tostada", "tense2": "tartine" },
+{ "tense1": "mermelada", "tense2": "confiture" },
+{ "tense1": "mantequilla", "tense2": "beurre" },
+{ "tense1": "sal", "tense2": "sel" },
+{ "tense1": "ciudad", "tense2": "ville" },
+{ "tense1": "campo", "tense2": "campagne" },
+{ "tense1": "playa", "tense2": "plage" },
+{ "tense1": "montaña", "tense2": "montagne" },
+{ "tense1": "bosque", "tense2": "forêt" },
+{ "tense1": "calle", "tense2": "rue" },
+{ "tense1": "parque", "tense2": "parc" },
+{ "tense1": "mar", "tense2": "mer" },
+{ "tense1": "lago", "tense2": "lac" },
+{ "tense1": "río", "tense2": "riviére" },
+{ "tense1": "país", "tense2": "pays" },
+{ "tense1": "continente", "tense2": "continent" },
+{ "tense1": "isla", "tense2": "île" },
+{ "tense1": "océano", "tense2": "océan" },
+{ "tense1": "colina", "tense2": "colline" },
+{ "tense1": "acantilado", "tense2": "falaise" },
+{ "tense1": "desierto", "tense2": "désert" },
+{ "tense1": "jardín", "tense2": "jardin" },
+{ "tense1": "pueblo", "tense2": "village" },
+{ "tense1": "periferia", "tense2": "banlieue" },
+{ "tense1": "puerto", "tense2": "port" },
+{ "tense1": "estación", "tense2": "station" },
+{ "tense1": "costa", "tense2": "côte" },
+{ "tense1": "paseo", "tense2": "promenade" },
+{ "tense1": "prado", "tense2": "champ" },
+{ "tense1": "llanura", "tense2": "plaine" },
+{ "tense1": "cueva", "tense2": "caverne" },
+{ "tense1": "castillo", "tense2": "château" },
+{ "tense1": "mezquita", "tense2": "mosquée" },
+{ "tense1": "médico/a", "tense2": "médecin" },
+{ "tense1": "abogado/a", "tense2": "avocat" },
+{ "tense1": "enfermero/a", "tense2": "infirmier(infirmière)" },
+{ "tense1": "profesor/a", "tense2": "enseignant(enseignante)" },
+{ "tense1": "ingeniero/a", "tense2": "ingénieur" },
+{ "tense1": "arquitecto/a", "tense2": "architecte" },
+{ "tense1": "veterinario/a", "tense2": "vétérinaire" },
+{ "tense1": "periodista", "tense2": "journaliste" },
+{ "tense1": "artista", "tense2": "artiste" },
+{ "tense1": "cocinero/a", "tense2": "chef" },
+{ "tense1": "policía", "tense2": "policier(policère)" },
+{ "tense1": "fontanero/a", "tense2": "plombier" },
+{ "tense1": "electricista", "tense2": "électricien(électricienne)" },
+{ "tense1": "peluquero/a", "tense2": "coiffeur(coiffeuse)" },
+{ "tense1": "secretario/a", "tense2": "secrétaire" },
+{ "tense1": "contador/a", "tense2": "comptable" },
+{ "tense1": "baker", "tense2": "boulanger" },
+{ "tense1": "bombero/a", "tense2": "pompier" },
+{ "tense1": "juez", "tense2": "juge" },
+{ "tense1": "autor/a", "tense2": "auteur" },
+{ "tense1": "actor/actriz", "tense2": "acteur(actrice)" },
+{ "tense1": "músico/a", "tense2": "musicien(musicienne)" },
+{ "tense1": "fotógrafo/a", "tense2": "photographe" },
+{ "tense1": "psicólogo/a", "tense2": "psychologue" },
+{ "tense1": "investigador/a", "tense2": "chercheur(chercheuse)" },
+{ "tense1": "auxiliar de enfermería", "tense2": "infirmier de soins infirmiers" },
+{ "tense1": "conductor/a", "tense2": "conducteur" },
+{ "tense1": "profesor/a", "tense2": "professeur" },
+{ "tense1": "gerente", "tense2": "gérant" },
+{ "tense1": "empresario/a", "tense2": "entrepreneur" },
+{ "tense1": "sol", "tense2": "soleil" },
+{ "tense1": "luna", "tense2": "lune" },
+{ "tense1": "estrella", "tense2": "étoile" },
+{ "tense1": "nube", "tense2": "nuage" },
+{ "tense1": "lluvia", "tense2": "pluie" },
+{ "tense1": "nieve", "tense2": "neige" },
+{ "tense1": "viento", "tense2": "vent" },
+{ "tense1": "tormenta", "tense2": "tempête" },
+{ "tense1": "arco iris", "tense2": "arc-en-ciel" },
+{ "tense1": "neblina", "tense2": "brume" },
+{ "tense1": "niebla", "tense2": "brouillard" },
+{ "tense1": "tormenta", "tense2": "orage" },
+{ "tense1": "rayo", "tense2": "foudre" },
+{ "tense1": "trueno", "tense2": "tonnerre" },
+{ "tense1": "aurora", "tense2": "aurore" },
+{ "tense1": "crepúsculo", "tense2": "crépuscule" },
+{ "tense1": "claridad", "tense2": "éclaircie" },
+{ "tense1": "huracán", "tense2": "ouragan" },
+{ "tense1": "tornado", "tense2": "tornade" },
+{ "tense1": "avalancha", "tense2": "avalanche" },
+{ "tense1": "montaña", "tense2": "montagne" },
+{ "tense1": "colina", "tense2": "colline" },
+{ "tense1": "río", "tense2": "rivière" },
+{ "tense1": "lago", "tense2": "lac" },
+{ "tense1": "océano", "tense2": "océan" },
+{ "tense1": "mar", "tense2": "mer" },
+{ "tense1": "playa", "tense2": "plage" },
+{ "tense1": "bosque", "tense2": "forêt" },
+{ "tense1": "flor", "tense2": "fleur" },
+{ "tense1": "árbol", "tense2": "arbre" },
+{ "tense1": "perro", "tense2": "chien" },
+{ "tense1": "gato", "tense2": "chat" },
+{ "tense1": "pájaro", "tense2": "oiseau" },
+{ "tense1": "caballo", "tense2": "cheval" },
+{ "tense1": "pez", "tense2": "poisson" },
+{ "tense1": "conejo", "tense2": "lapin" },
+{ "tense1": "ratón", "tense2": "souris" },
+{ "tense1": "elefante", "tense2": "éléphant" },
+{ "tense1": "tigre", "tense2": "tigre" },
+{ "tense1": "león", "tense2": "lion" },
+{ "tense1": "oso", "tense2": "ours" },
+{ "tense1": "cerdo", "tense2": "cochon" },
+{ "tense1": "vaca", "tense2": "vache" },
+{ "tense1": "oveja", "tense2": "mouton" },
+{ "tense1": "pato", "tense2": "canard" },
+{ "tense1": "gallina", "tense2": "poule" },
+{ "tense1": "ganso", "tense2": "oie" },
+{ "tense1": "rana", "tense2": "grenouille" },
+{ "tense1": "serpiente", "tense2": "serpent" },
+{ "tense1": "abeja", "tense2": "abeille" },
+{ "tense1": "mariposa", "tense2": "papillon" },
+{ "tense1": "hormiga", "tense2": "fourmi" },
+{ "tense1": "araña", "tense2": "araignée" },
+{ "tense1": "ardilla", "tense2": "écureuil" },
+{ "tense1": "zorro", "tense2": "renard" },
+{ "tense1": "cabra", "tense2": "chèvre" },
+{ "tense1": "burro", "tense2": "âne" },
+{ "tense1": "delfín", "tense2": "dauphin" },
+{ "tense1": "ballena", "tense2": "baleine" },
+{ "tense1": "tiburón", "tense2": "requin" },
+{ "tense1": "fútbol", "tense2": "football" },
+{ "tense1": "baloncesto", "tense2": "basket-ball" },
+{ "tense1": "tenis", "tense2": "tennis" },
+{ "tense1": "natación", "tense2": "natation" },
+{ "tense1": "atletismo", "tense2": "athlétisme" },
+{ "tense1": "gimnasia", "tense2": "gymnastique" },
+{ "tense1": "ciclismo", "tense2": "cyclisme" },
+{ "tense1": "senderismo", "tense2": "randonnée" },
+{ "tense1": "escalada", "tense2": "escalade" },
+{ "tense1": "snowboard", "tense2": "snowboard" },
+{ "tense1": "esquí", "tense2": "ski" },
+{ "tense1": "squash", "tense2": "squash" },
+{ "tense1": "voleibol", "tense2": "volley-ball" },
+{ "tense1": "balonmano", "tense2": "handball" },
+{ "tense1": "equitación", "tense2": "équitation" },
+{ "tense1": "buceo", "tense2": "plongée" },
+{ "tense1": "deportes acuáticos", "tense2": "sports nautiques" },
+{ "tense1": "petanca", "tense2": "pétanque" },
+{ "tense1": "remo", "tense2": "paddle" },
+{ "tense1": "pesca", "tense2": "pêche" },
+{ "tense1": "footing", "tense2": "jogging" },
+{ "tense1": "carrera a pie", "tense2": "course à pied" },
+{ "tense1": "yoga", "tense2": "yoga" },
+{ "tense1": "pilates", "tense2": "pilates" },
+{ "tense1": "artes marciales", "tense2": "arts martiaux" },
+{ "tense1": "danza", "tense2": "danza" },
+{ "tense1": "teatro", "tense2": "théâtre" },
+{ "tense1": "cine", "tense2": "cinéma" },
+{ "tense1": "lectura", "tense2": "lecture" },
+{ "tense1": "enfermedad", "tense2": "maladie" },
+{ "tense1": "fiebre", "tense2": "fièvre" },
+{ "tense1": "tos", "tense2": "toux" },
+{ "tense1": "dolor de cabeza", "tense2": "mal de tête" },
+{ "tense1": "dolor de garganta", "tense2": "mal de gorge" },
+{ "tense1": "resfriado", "tense2": "rhume" },
+{ "tense1": "gripe", "tense2": "grippe" },
+{ "tense1": "náuseas", "tense2": "nausée" },
+{ "tense1": "vómito", "tense2": "vomissement" },
+{ "tense1": "diarrea", "tense2": "diarrhée" },
+{ "tense1": "estreñimiento", "tense2": "constipation" },
+{ "tense1": "presión arterial", "tense2": "tension artérielle" },
+{ "tense1": "dolor", "tense2": "douleur" },
+{ "tense1": "fatiga", "tense2": "fatigue" },
+{ "tense1": "estrés", "tense2": "stress" },
+{ "tense1": "depresión", "tense2": "dépression" },
+{ "tense1": "enfermedad", "tense2": "maladie" },
+{ "tense1": "fiebre", "tense2": "fièvre" },
+{ "tense1": "tos", "tense2": "toux" },
+{ "tense1": "dolor de cabeza", "tense2": "mal de tête" },
+{ "tense1": "dolor de garganta", "tense2": "mal de gorge" },
+{ "tense1": "resfriado", "tense2": "rhume" },
+{ "tense1": "gripe", "tense2": "grippe" },
+{ "tense1": "náuseas", "tense2": "nausée" },
+{ "tense1": "vómito", "tense2": "vomissement" },
+{ "tense1": "diarrea", "tense2": "diarrhée" },
+{ "tense1": "estreñimiento", "tense2": "constipation" },
+{ "tense1": "presión arterial", "tense2": "tension artérielle" },
+{ "tense1": "dolor", "tense2": "douleur" },
+{ "tense1": "fatiga", "tense2": "fatigue" },
+{ "tense1": "estrés", "tense2": "stress" },
+{ "tense1": "depresión", "tense2": "dépression" },
+{ "tense1": "ansiedad", "tense2": "anxiété" },
+{ "tense1": "insomnio", "tense2": "insomnie" },
+{ "tense1": "alergia", "tense2": "allergie" },
+{ "tense1": "asma", "tense2": "asthme" },
+{ "tense1": "herida", "tense2": "plaie" },
+{ "tense1": "fractura", "tense2": "fracture" },
+{ "tense1": "lesión", "tense2": "blessure" },
+{ "tense1": "quemadura", "tense2": "brûlure" },
+{ "tense1": "infección", "tense2": "infection" },
+{ "tense1": "contagio", "tense2": "contagion" },
+{ "tense1": "virus", "tense2": "virus" },
+{ "tense1": "bacteria", "tense2": "bactérie" },
+{ "tense1": "médico", "tense2": "médecin" },
+{ "tense1": "farmacia", "tense2": "pharmacie" },
+{ "tense1": "libro", "tense2": "livre" },
+{ "tense1": "bolígrafo", "tense2": "stylo" },
+{ "tense1": "lápiz", "tense2": "crayon" },
+{ "tense1": "ordenador/portátil", "tense2": "ordinateur" },
+{ "tense1": "clase", "tense2": "classe" },
+{ "tense1": "aula", "tense2": "salle de classe" },
+{ "tense1": "profesor/a", "tense2": "professeur" },
+{ "tense1": "estudiante", "tense2": "étudiant" },
+{ "tense1": "escuela", "tense2": "école" },
+{ "tense1": "universidad", "tense2": "université" },
+{ "tense1": "cuaderno", "tense2": "cahier" },
+{ "tense1": "hoja de papel", "tense2": "feuille de papier" },
+{ "tense1": "escritorio", "tense2": "bureau" },
+{ "tense1": "silla", "tense2": "chaise" },
+{ "tense1": "mesa", "tense2": "table" },
+{ "tense1": "mochila", "tense2": "cartable" },
+{ "tense1": "lápiz de colores", "tense2": "crayon de couleur" },
+{ "tense1": "borrador", "tense2": "gomme" },
+{ "tense1": "calculadora", "tense2": "calculatrice" },
+{ "tense1": "diccionario", "tense2": "dictionnaire" },
+{ "tense1": "libro de texto", "tense2": "livre de cours" },
+{ "tense1": "pluma", "tense2": "plume" },
+{ "tense1": "mapa", "tense2": "carte" },
+{ "tense1": "tijeras", "tense2": "ciseaux" },
+{ "tense1": "cinta adhesiva", "tense2": "ruban adhésif" },
+{ "tense1": "agenda", "tense2": "agenda" },
+{ "tense1": "clip", "tense2": "trombone" },
+{ "tense1": "reloj", "tense2": "horloge" },
+{ "tense1": "globo terráqueo", "tense2": "globes terrestres" },
+{ "tense1": "mapa", "tense2": "carte" },
+{ "tense1": "padre", "tense2": "père" },
+{ "tense1": "madre", "tense2": "mère" },
+{ "tense1": "hijo", "tense2": "fils" },
+{ "tense1": "hija", "tense2": "fille" },
+{ "tense1": "hermano", "tense2": "frère" },
+{ "tense1": "hermana", "tense2": "sœur" },
+{ "tense1": "abuelo", "tense2": "grand-père" },
+{ "tense1": "abuela", "tense2": "grand-mère" },
+{ "tense1": "tío", "tense2": "oncle" },
+{ "tense1": "tía", "tense2": "tante" },
+{ "tense1": "primo", "tense2": "cousin" },
+{ "tense1": "prima", "tense2": "cousine" },
+{ "tense1": "sobrino", "tense2": "neveu" },
+{ "tense1": "sobrina", "tense2": "niece" },
+{ "tense1": "bebé", "tense2": "bébé" },
+{ "tense1": "yerno", "tense2": "gendre" },
+{ "tense1": "nuera", "tense2": "belle-fille" },
+{ "tense1": "suegro", "tense2": "beau-père" },
+{ "tense1": "suegra", "tense2": "belle-mère" },
+{ "tense1": "madera", "tense2": "bois" },
+{ "tense1": "acero", "tense2": "acier" },
+{ "tense1": "vidrio", "tense2": "verre" },
+{ "tense1": "piedra", "tense2": "pierre" },
+{ "tense1": "plástico", "tense2": "plastique" },
+{ "tense1": "algodón", "tense2": "coton" },
+{ "tense1": "seda", "tense2": "soie" },
+{ "tense1": "cuero", "tense2": "cuir" },
+{ "tense1": "arcilla", "tense2": "argile" },
+{ "tense1": "metal", "tense2": "métal" },
+{ "tense1": "hormigón", "tense2": "béton" },
+{ "tense1": "papel", "tense2": "papier" },
+{ "tense1": "caucho", "tense2": "caoutchouc" },
+{ "tense1": "elástico", "tense2": "élastique" },
+{ "tense1": "roca", "tense2": "roche" },
+{ "tense1": "mármol", "tense2": "marbre" },
+{ "tense1": "granito", "tense2": "granit" },
+{ "tense1": "pizarra", "tense2": "ardoise" },
+{ "tense1": "enfermedad", "tense2": "maladie" },
+{ "tense1": "fiebre", "tense2": "fièvre" },
+{ "tense1": "tos", "tense2": "toux" },
+{ "tense1": "dolor de cabeza", "tense2": "mal de tête" },
+{ "tense1": "dolor de garganta", "tense2": "mal de gorge" },
+{ "tense1": "resfriado", "tense2": "rhume" },
+{ "tense1": "gripe", "tense2": "grippe" },
+{ "tense1": "náuseas", "tense2": "nausée" },
+{ "tense1": "vómito", "tense2": "vomissement" },
+{ "tense1": "diarrea", "tense2": "diarrhée" },
+{ "tense1": "estreñimiento", "tense2": "constipation" },
+{ "tense1": "presión arterial", "tense2": "tension artérielle" },
+{ "tense1": "dolor", "tense2": "douleur" },
+{ "tense1": "fatiga", "tense2": "fatigue" },
+{ "tense1": "estrés", "tense2": "stress" },
+{ "tense1": "depresión", "tense2": "dépression" },
+{ "tense1": "ansiedad", "tense2": "anxiété" },
+{ "tense1": "insomnio", "tense2": "insomnie" },
+{ "tense1": "alergia", "tense2": "allergie" },
+{ "tense1": "asma", "tense2": "asthme" },
+{ "tense1": "herida", "tense2": "plaie" },
+{ "tense1": "fractura", "tense2": "fracture" },
+{ "tense1": "lesión", "tense2": "blessure" },
+{ "tense1": "quemadura", "tense2": "brûlure" },
+{ "tense1": "infección", "tense2": "infection" },
+{ "tense1": "contagio", "tense2": "contagion" },
+{ "tense1": "virus", "tense2": "virus" },
+{ "tense1": "bacteria", "tense2": "bactérie" },
+{ "tense1": "médico", "tense2": "médecin" },
+{ "tense1": "farmacia", "tense2": "pharmacie" },
+{ "tense1": "libro", "tense2": "livre" },
+{ "tense1": "bolígrafo", "tense2": "stylo" },
+{ "tense1": "lápiz", "tense2": "crayon" },
+{ "tense1": "ordenador/portátil", "tense2": "ordinateur" },
+{ "tense1": "clase", "tense2": "classe" },
+{ "tense1": "aula", "tense2": "salle de classe" },
+{ "tense1": "profesor/a", "tense2": "professeur" },
+{ "tense1": "estudiante", "tense2": "étudiant" },
+{ "tense1": "escuela", "tense2": "école" },
+{ "tense1": "universidad", "tense2": "université" },
+{ "tense1": "cuaderno", "tense2": "cahier" },
+{ "tense1": "hoja de papel", "tense2": "feuille de papier" },
+{ "tense1": "escritorio", "tense2": "bureau" },
+{ "tense1": "silla", "tense2": "chaise" },
+{ "tense1": "mesa", "tense2": "table" },
+{ "tense1": "mochila", "tense2": "cartable" },
+{ "tense1": "lápiz de colores", "tense2": "crayon de couleur" },
+{ "tense1": "borrador", "tense2": "gomme" },
+{ "tense1": "calculadora", "tense2": "calculatrice" },
+{ "tense1": "diccionario", "tense2": "dictionnaire" },
+{ "tense1": "libro de texto", "tense2": "livre de cours" },
+{ "tense1": "pluma", "tense2": "plume" },
+{ "tense1": "mapa", "tense2": "carte" },
+{ "tense1": "tijeras", "tense2": "ciseaux" },
+{ "tense1": "cinta adhesiva", "tense2": "ruban adhésif" },
+{ "tense1": "agenda", "tense2": "agenda" },
+{ "tense1": "clip", "tense2": "trombone" },
+{ "tense1": "reloj", "tense2": "horloge" },
+{ "tense1": "globo terráqueo", "tense2": "globes terrestres" },
+{ "tense1": "mapa", "tense2": "carte" },
+{ "tense1": "padre", "tense2": "père" },
+{ "tense1": "madre", "tense2": "mère" },
+{ "tense1": "hijo", "tense2": "fils" },
+{ "tense1": "hija", "tense2": "fille" },
+{ "tense1": "hermano", "tense2": "frère" },
+{ "tense1": "hermana", "tense2": "sœur" },
+{ "tense1": "abuelo", "tense2": "grand-père" },
+{ "tense1": "abuela", "tense2": "grand-mère" },
+{ "tense1": "tío", "tense2": "oncle" },
+{ "tense1": "tía", "tense2": "tante" },
+{ "tense1": "primo", "tense2": "cousin" },
+{ "tense1": "prima", "tense2": "cousine" },
+{ "tense1": "sobrino", "tense2": "neveu" },
+{ "tense1": "sobrina", "tense2": "niece" },
+{ "tense1": "bebé", "tense2": "bébé" },
+{ "tense1": "yerno", "tense2": "gendre" },
+{ "tense1": "nuera", "tense2": "belle-fille" },
+{ "tense1": "suegro", "tense2": "beau-père" },
+{ "tense1": "suegra", "tense2": "belle-mère" },
+{ "tense1": "madera", "tense2": "bois" },
+{ "tense1": "acero", "tense2": "acier" },
+{ "tense1": "vidrio", "tense2": "verre" },
+{ "tense1": "piedra", "tense2": "pierre" },
+{ "tense1": "plástico", "tense2": "plastique" },
+{ "tense1": "algodón", "tense2": "coton" },
+{ "tense1": "seda", "tense2": "soie" },
+{ "tense1": "cuero", "tense2": "cuir" },
+{ "tense1": "arcilla", "tense2": "argile" },
+{ "tense1": "metal", "tense2": "métal" },
+{ "tense1": "hormigón", "tense2": "béton" },
+{ "tense1": "papel", "tense2": "papier" },
+{ "tense1": "caucho", "tense2": "caoutchouc" },
+{ "tense1": "elástico", "tense2": "élastique" },
+{ "tense1": "roca", "tense2": "roche" },
+{ "tense1": "mármol", "tense2": "marbre" },
+{ "tense1": "granito", "tense2": "granit" },
+{ "tense1": "pizarra", "tense2": "ardoise" },
+{ "tense1": "tejido", "tense2": "tissu" },
+{ "tense1": "porcelana", "tense2": "porcelaine" },
+{ "tense1": "tierra", "tense2": "terre" },
+{ "tense1": "hoja", "tense2": "feuille" },
+{ "tense1": "metálico", "tense2": "métallique" },
+{ "tense1": "pluma", "tense2": "plume" },
+{ "tense1": "ladrillo", "tense2": "brique" },
+{ "tense1": "material", "tense2": "matériel" },
+{ "tense1": "transparent", "tense2": "transparent" },
+{ "tense1": "opaco", "tense2": "opaque" },
+{ "tense1": "redondo/a", "tense2": "rond(ronde)" },
+{ "tense1": "cuadrado/a", "tense2": "carré(carrée)" },
+{ "tense1": "rectangular", "tense2": "rectangulaire" },
+{ "tense1": "ovalado/a", "tense2": "ovale" },
+{ "tense1": "circular", "tense2": "circulaire" },
+{ "tense1": "hexagonal/a", "tense2": "hexagonal(hexagonale)" },
+{ "tense1": "piramidal/a", "tense2": "pyramidal(pyramidale)" },
+{ "tense1": "esférico/a", "tense2": "sphérique" },
+{ "tense1": "cúbico/a", "tense2": "cubique" },
+{ "tense1": "feliz", "tense2": "heureux" },
+{ "tense1": "triste", "tense2": "triste" },
+{ "tense1": "enfadado/a", "tense2": "en colère" },
+{ "tense1": "asustado/a", "tense2": "effrayé" },
+{ "tense1": "sorprendido/a", "tense2": "surpris" },
+{ "tense1": "emocionado/a", "tense2": "excité" },
+{ "tense1": "decepcionado/a", "tense2": "déçu" },
+{ "tense1": "ansioso/a", "tense2": "anxieux" },
+{ "tense1": "tranquilo/a", "tense2": "calme" },
+{ "tense1": "enamorado/a", "tense2": "amoureux" },
+{ "tense1": "celoso/a", "tense2": "jaloux" },
+{ "tense1": "avergonzado/a", "tense2": "embarrassé" },
+{ "tense1": "confundido/a", "tense2": "confus" },
+{ "tense1": "contento/a", "tense2": "heureux" },
+{ "tense1": "molesto/a", "tense2": "fâché" },
+{ "tense1": "irritado/a", "tense2": "agacé" },
+{ "tense1": "deprimido/a", "tense2": "déprimé" },
+{ "tense1": "satisfecho/a", "tense2": "satisfait" },
+{ "tense1": "nostálgico/a", "tense2": "nostalgique" },
+{ "tense1": "angustiado/a", "tense2": "angoissé" },
+{ "tense1": "silla", "tense2": "chaise" },
+{ "tense1": "mesa", "tense2": "table" },
+{ "tense1": "cocina", "tense2": "cuisine" },
+{ "tense1": "cama", "tense2": "lit" },
+{ "tense1": "sofá", "tense2": "canapé" },
+{ "tense1": "ventana", "tense2": "fenêtre" },
+{ "tense1": "puerta", "tense2": "porte" },
+{ "tense1": "armario", "tense2": "placard" },
+{ "tense1": "televisión", "tense2": "télévision" },
+{ "tense1": "luz", "tense2": "lumière" },
+{ "tense1": "alfombra", "tense2": "tapis" },
+{ "tense1": "escritorio", "tense2": "bureau" },
+{ "tense1": "bañera", "tense2": "baignoire" },
+{ "tense1": "baño", "tense2": ["toilettes", "salle de bains"] },
+{ "tense1": "lavabo", "tense2": "lavabo" },
+{ "tense1": "fregadero", "tense2": "évier" },
+{ "tense1": "espejo", "tense2": "miroir" },
+{ "tense1": "cortina", "tense2": "rideau" },
+{ "tense1": "teléfono", "tense2": "téléphone" },
+{ "tense1": "ordenador", "tense2": "ordinateur" },
+{ "tense1": "teclado", "tense2": "clavier" },
+{ "tense1": "control remoto", "tense2": "télécommande" },
+{ "tense1": "nevera", "tense2": "réfrigérateur" },
+{ "tense1": "microondas", "tense2": "micro-ondes" },
+{ "tense1": "lavadora", "tense2": "lave-linge" },
+{ "tense1": "secadora", "tense2": "sèche-linge" },
+{ "tense1": "plancha", "tense2": "fer à repasser" },
+{ "tense1": "aspiradora", "tense2": "aspirateur" },
+{ "tense1": "horno", "tense2": "four" },
+{ "tense1": "estufa", "tense2": "cuisinière" },
+{ "tense1": "planta", "tense2": "plante" },
+{ "tense1": "reloj", "tense2": "horloge" },
+{ "tense1": "marco", "tense2": "cadre" },
+{ "tense1": "radiador", "tense2": "radiateur" },
+{ "tense1": "cojín", "tense2": "coussin" },
+{ "tense1": "interruptor", "tense2": "interrupteur" },
+{ "tense1": "enchufe", "tense2": "prise de courant" },
+{ "tense1": "persiana", "tense2": "volet" },
+{ "tense1": "escalera", "tense2": "escalier" },
+{ "tense1": "cajón", "tense2": "tiroir" },
+{ "tense1": "papelera", "tense2": "poubelle" },
+{ "tense1": "escoba", "tense2": "balai" },
+{ "tense1": "cubo", "tense2": "seau" },
+{ "tense1": "televisión", "tense2": "télévision" },
+{ "tense1": "lámpara", "tense2": "lampe" },
+{ "tense1": "vela", "tense2": "bougie" },
+{ "tense1": "cenicero", "tense2": "cendrier" },
+{ "tense1": "vajilla", "tense2": "vaisselle" },
+{ "tense1": "cuchillo", "tense2": "couteau" },
+{ "tense1": "tenedor", "tense2": "fourchette" },
+{ "tense1": "cuchara", "tense2": "cuillère" },
+{ "tense1": "vaso", "tense2": "verre" },
+{ "tense1": "plato", "tense2": "assiette" },
+{ "tense1": "tazón", "tense2": "bol" },
+{ "tense1": "cacerola", "tense2": "casserole" },
+{ "tense1": "sartén", "tense2": "poêle" },
+{ "tense1": "taza", "tense2": "tasse" },
+{ "tense1": "tetera", "tense2": "théière" },
+{ "tense1": "cafetera", "tense2": "cafetière" },
+{ "tense1": "hervidor", "tense2": "bouilloire" },
+{ "tense1": "puesto", "tense2": "sac" },
+{ "tense1": "base", "tense2": "base" },
+{ "tense1": "aula", "tense2": "salle de classe" },
+{ "tense1": "aula", "tense2": "placard" },
+{ "tense1": "estante", "tense2": "etagère" },
+{ "tense1": "cocina", "tense2": "cuisine" },
+{ "tense1": "comedor", "tense2": "salle à manger" },
+{ "tense1": "sala de estar", "tense2": "salon" },
+{ "tense1": "habitación", "tense2": "chambre" },
+{ "tense1": "ducha", "tense2": "douche" },
+{ "tense1": "oficina", "tense2": "bureau" },
+{ "tense1": "garaje", "tense2": "garage" },
+{ "tense1": "jardín", "tense2": "jardin" },
+{ "tense1": "sala de juegos", "tense2": "salle de jeux" },
+{ "tense1": "pasillo", "tense2": "couloir" },
+{ "tense1": "balcón", "tense2": "balcon" },
+{ "tense1": "ático", "tense2": "grenier" },
+{ "tense1": "estante", "tense2": "étagère" }
+];
+
+
+ 
+let currentList = [];
+        let currentWordIndex = 0;
+        let remainingWords = 0;
+        this.currentListNumber = 0;
+
+        function createWordLists() {
+            const wordLists = document.getElementById('wordLists');
+
+            const listItem = document.createElement('a');
+                listItem.href = '#';
+                listItem.className = 'list-group-item list-group-item-action';
+                listItem.innerText = `Aleatorio`;
+                const completions = getLocalStorage(`list0`) || 0;
+                listItem.innerText += ` (Completedo ${completions} veces)`;
+                listItem.onclick = () => startList(-1, -1, 0);
+                wordLists.appendChild(listItem);
+
+            for (let i = 0; i < words.length; i += 30) {
+                const listNumber = Math.floor(i / 30) + 1;
+                const listItem = document.createElement('a');
+                listItem.href = '#';
+                listItem.className = 'list-group-item list-group-item-action';
+                listItem.innerText = `Listado ${listNumber}`;
+                const completions = getLocalStorage(`list${listNumber}`) || 0;
+                listItem.innerText += ` (Completedo ${completions} veces)`;
+                listItem.onclick = () => startList(i, i + 30, listNumber);
+                wordLists.appendChild(listItem);
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startList(start, end, listNumber) {
+            if (listNumber == 0) {
+                for (let i = 0; i < 30; i++) {
+                    const randomIndex = Math.floor(Math.random() * words.length);
+                    currentList.push(words[randomIndex]);
+                }
+            } else {
+                currentList = words.slice(start, end);
+                shuffle(currentList);
+            }
+            
+
+            remainingWords = currentList.length;
+            currentWordIndex = 0;
+            this.currentListNumber = listNumber; // Store the list number
+            showNextWord();
+            document.getElementById('wordLists').style.display = 'none';
+            document.getElementById('wordCard').style.display = 'block';
+            updateProgress();
+        }
+
+        function showNextWord() {
+            if (currentWordIndex < currentList.length) {
+                const word = currentList[currentWordIndex];
+                const isTense1 = Math.random() < 0.5;
+                document.getElementById('currentWord').innerText = isTense1 ? word.tense1 : word.tense2;
+                document.getElementById('translation').innerText = isTense1 ? word.tense2 : word.tense1;
+                document.getElementById('translation').style.display = 'none';
+            } else {
+                finishList();
+            }
+        }
+
+        function verifyWord() {
+            document.getElementById('translation').style.display = 'block';
+        }
+
+        function markWord(status) {
+            if (status === 'KO') {
+                currentList.push(currentList[currentWordIndex]);
+            } else {
+                remainingWords--;
+            }
+            currentWordIndex++;
+            showNextWord();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            document.getElementById('progress').innerText = `${remainingWords}/30`;
+        }
+
+        function finishList() {
+            const completions = parseInt(getLocalStorage(`list${this.currentListNumber}`)) || 0;
+            setLocalStorage(`list${this.currentListNumber}`, completions + 1);
+            alert('Bravo! Completaste la lista !');
+            document.getElementById('wordCard').style.display = 'none';
+            document.getElementById('wordLists').style.display = 'block';
+            createWordLists(); // Refresh the list to show updated completion count
+        }
+
+        function setLocalStorage(name, value) {
+            localStorage.setItem(name, value);
+        }
+
+        function getLocalStorage(name) {
+            return localStorage.getItem(name);
+        }
+
+        createWordLists();
+
+     
+
+        function showRandomVerb() {
+            // Generate random pronoun and tense
+
+            // Select a random verb from the verbs array
+            var randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
+            var randomPronoun = pronouns[Math.floor(Math.random() * pronouns.length)];
+            var randomTense = tenses[Math.floor(Math.random() * tenses.length)];
+
+            // Update the HTML elements with the random verb
+            document.getElementById("randomVerb").textContent = randomPronoun + " " + randomVerb.tense1 ;
+            document.getElementById("tense2Verb").textContent = randomVerb.tense2;
+            document.getElementById("randomTense").textContent = randomTense.name;
+            document.getElementById("hintText").textContent = randomTense.hint;
+
+            // Determine if to add "(negative)"
+            var includeNegative = Math.random() <= 0.2; // 20% chance
+            
+            if (includeNegative) {
+                document.getElementById("randomNegative").textContent = "(Negation)";
+            } else {
+                document.getElementById("randomNegative").textContent = "";
+            } 
+        }
+
+        function clearContent() {
+            document.getElementById("randomVerb").textContent = "" ;
+            document.getElementById("tense2Verb").textContent = "";
+            document.getElementById("randomTense").textContent = "";
+            document.getElementById("randomNegative").textContent = "";
+        }
+
+        var timerInterval;
+        var score = 0;
+        var timeLeft = 60; // 60 seconds
+
+        function startGame() {
+            resetGame();
+            document.getElementById("startBtn").style.display = "none";
+            document.getElementById("resetBtn").style.display = "inline-block";
+            document.getElementById("nextBtn").style.display = "inline-block";
+            document.getElementById("hintBtn").style.display = "inline-block";
+            document.getElementById("hintBtn").textContent = "hint";
+
+            
+            showRandomVerb();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById("timer").textContent = timeLeft;
+
+            if (timeLeft === 0) {
+                endGame();
+            }
+        }
+
+        function NextVerb() {
+            
+            score++;
+            document.getElementById("score").textContent = score;
+            showRandomVerb();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("resetBtn").style.display = "none";
+            document.getElementById("nextBtn").style.display = "none";
+            document.getElementById("hintBtn").style.display = "none";
+
+            clearContent();
+
+            alert("Game Over! Your score: " + score);
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            score = 0;
+            timeLeft = 60;
+            document.getElementById("score").textContent = score;
+            document.getElementById("timer").textContent = timeLeft;
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("resetBtn").style.display = "none";
+            document.getElementById("nextBtn").style.display = "none";
+            document.getElementById("hintBtn").style.display = "none";
+
+            clearContent();
+        }
+
+
+        function closeHint() {
+            document.getElementById("hint").style.display = "none";
+        }
+
+        function showHint() {
+            document.getElementById("hint").style.display = "inline-block";
+        }
+
+
+
+
+
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

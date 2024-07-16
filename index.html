@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practicar Idioma</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: rgb(30, 30, 30);
+        }
+        .card {
+            min-width: 300px;
+            width: auto;
+            max-width: 100%;
+            text-align: center;
+        }
+        .word {
+            font-size: 1.5em;
+        }
+        .tense1 {
+            font-size: 4em;
+        }
+        .tense2 {
+            color: gray;
+        }
+        #myTab {
+            position: fixed;
+            top: 0;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+        .list-group {
+            max-height: 60vh;
+            overflow-y: auto;
+        }   
+        
+        #hint {
+            position: fixed;
+            width: 50vw;
+            height: 50vh;
+            display: none;
+            background-color: white;
+            color: black;
+            z-index: 10;
+            
+        }
+        #hintText {
+            font-size: 1em;
+        }
+
+        pre {
+            white-space: pre-wrap; /* Wraps text inside the pre element */
+            word-wrap: break-word;  /* Allows long words to break and wrap to the next line */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="vocabulary-tab" data-toggle="tab" href="#vocabulary" role="tab" aria-controls="vocabulary" aria-selected="true">Vocabulary</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="verbs-tab" data-toggle="tab" href="#verbs" role="tab" aria-controls="verbs" aria-selected="false">Verbs</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="expression-tab" data-toggle="tab" href="#expression" role="tab" aria-controls="expression" aria-selected="false">Expression</a>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="vocabulary" role="tabpanel" aria-labelledby="vocabulary-tab">
+                <div class="list-group mt-3" id="wordLists"></div>
+                <div class="card shadow-sm mt-3" id="wordCard" style="display: none;">
+                    <div class="card-body">
+                        <p class="word tense1" id="currentWord"></p>
+                        <p class="word tense2" id="translation" style="display: none;"></p>
+                        <button class="btn btn-info mb-2" onclick="verifyWord()">Verify</button>
+                        <button class="btn btn-success mb-2" onclick="markWord('OK')">OK</button>
+                        <button class="btn btn-danger mb-2" onclick="markWord('KO')">KO</button>
+                        <p id="progress"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="verbs" role="tabpanel" aria-labelledby="verbs-tab">
+                <span class="timer" style="color: white;">Time: <span id="timer">60</span> seconds - </span>
+                <span class="score" style="color: white;">Score: <span id="score">0</span></span>
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body">
+                        <p class="word tense1" id="randomVerb"></p>
+                        <p class="word tense1" id="randomTense"></p>
+                        <p class="word tense1" id="randomNegative"></p>
+                        <p class="word tense2" id="tense2Verb"></p>
+                        <button id="nextBtn" class="btn btn-primary" style="display: none;" onclick="NextVerb()">Next Verb</button>
+                        <button id="hintBtn" class="btn" style="display: none;" onclick="showHint()">Hint</button>
+                    </div>
+                </div>
+                <button class="btn btn-success mt-3" id="startBtn" onclick="startGame()">Start Game</button>
+                <button class="btn btn-danger mt-3" id="resetBtn" onclick="resetGame()" style="display: none;">Reset Game</button>
+            </div>
+            <div class="tab-pane fade" id="expression" role="tabpanel" aria-labelledby="expression-tab">
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body">
+                        <img id="randomImage" class="img-responsive" src="" alt="Random Image"><br/>
+                        <button class="btn btn-primary mt-3" onclick="refreshImage()">Refresh Image</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const  pronouns = ["أنا", "أنتَ", "أنتِ", "هو", "هما", "هي", "نحن", "أنتما", "أنتم", "أنتن", "هم", "هن"];
+
+
+        const tenses = [
+        { "name": "الماضي", "hint": "Passé" }, 
+        { "name": "الحاضر", "hint": "Présent" }, 
+        { "name": "المستقبل", "hint": "Futur" }, 
+        { "name": "المضارع المجزوم", "hint": "Subjonctif" }, 
+        { "name": "الأمر", "hint": "impératif: أفعل => كُتِبْ / افتعل => اكْتُبْ" }, 
+        { "name": "الماضي التام", "hint": "Plus-que-parfait: كان + passé" }, 
+        { "name": "الماضي الناقص", "hint": "Imparfait: كان + présent" }, 
+        { "name": "المبني للمجهول الحاضر", "hint": "Passif présent: يَكْتُبُ => يُكْتَبُ / يُدَرِّسُ => يُدَرَّسُ" }, 
+        { "name": "المبني للمجهول الماضي", "hint": "Passif passé: كَتَبَ  => كُتِبَ / كان + مَفْعُول" }, 
+        { "name": "الشرط الماضي", "hint": "Conditionel passé: لَوْ درستُ، لَنَجَحْتُ" }, 
+        { "name": "الشرط المضارع","hint": "Conditionel présent: إذا درسَ، سيَنجَحُ" }, 
+        { "name": "المصدر", "hint": "Nom verbale: دَرَسَ => دِرَاسَة" }
+    ];
+
+
+    var verbs = [
+    { "tense2": "يُشَارِكُ / شَارَكَ / مُشَارَكَة", "tense1": "Participer" },
+    { "tense2": "يُشَارِكُ / شَارَكَ / مُشَارَكَة", "tense1": "Partager" },
+    { "tense2": "يُنَظِّمُ / نَظَّمَ / تَنْظِيم", "tense1": "Organiser" },
+    { "tense2": "يَسْتَأْجِرُ / اِسْتَأْجَرَ / اِسْتِئْجَار", "tense1": "Louer" },
+    { "tense2": "يَسْتَعِيدُ / اِسْتَعَادَ / اِسْتِعَادَة", "tense1": "Récupérer" },
+    { "tense2": "يُجِيبُ / أَجَابَ / إِجَابَة", "tense1": "Répondre" },
+    { "tense2": "يُقَدِّمُ / قَدَّمَ / تَقْدِيم", "tense1": "Présenter" },
+    { "tense2": "يُقَدِّمُ / قَدَّمَ / تَقْدِيم", "tense1": "Offrir" },
+    { "tense2": "يَشْرَبُ / شَرِبَ / شُرْب", "tense1": "Boire" },
+    { "tense2": "يَحْسِبُ / حَسَبَ / حِسَاب", "tense1": "Compter" },
+    { "tense2": "يَصُبُّ / صَبَّ / صَبّ", "tense1": "Verser" },
+    { "tense2": "يَنْزِفُ / نَزَفَ / نَزِيف", "tense1": "Saigner" },
+    { "tense2": "يَسْأَلُ / سَأَلَ / سُؤَال", "tense1": "Demander" },
+    { "tense2": "يَسْتَخْرِجُ / اِسْتَخْرَجَ / اِسْتِخْرَاج", "tense1": "Extraire" },
+    { "tense2": "يَأْمُرُ / أَمَرَ / أَمْر", "tense1": "Ordonner" },
+    { "tense2": "يَرْتَكِبُ / اِرْتَكَبَ / اِرْتِكَاب", "tense1": "Commettre" },
+    { "tense2": "يَرْفَعُ / رَفَعَ / رَفْع", "tense1": "Lever" },
+    { "tense2": "يَكْشِفُ / كَشَفَ / كَشْف", "tense1": "Révéler" },
+    { "tense2": "يَحْصُلُ / حَصَلَ / حُصُول", "tense1": "Obtenir" },
+    { "tense2": "يَقْسِمُ / قَسَمَ / تَقْسِيم", "tense1": "Diviser" },
+    { "tense2": "يُكَلِّفُ / كَلَّفَ / تَكْلِيف", "tense1": "Coûter" },
+    { "tense2": "يَنْصِبُ / نَصَبَ / نَصْب", "tense1": "Installer" },
+    { "tense2": "يُوَدِّعُ / وَدَّعَ / وَدَاع", "tense1": "Dire au revoir" },
+    { "tense2": "يَدْعُو / دَعَا / دَعْوَة", "tense1": "Inviter" },
+    { "tense2": "يُفْسِدُ / أَفْسَدَ / إِفْسَاد", "tense1": "Gâcher" },
+    { "tense2": "يَعِيشُ / عَاشَ / عَيْش", "tense1": "Vivre" },
+    { "tense2": "يَطْلُبُ / طَلَبَ / طَلَب", "tense1": "Commander" },
+    { "tense2": "يُمْسِكُ / أَمْسَكَ / إِمْسَاك", "tense1": "Attraper" },
+    { "tense2": "يُؤْذِي / آذَى / أَذًى", "tense1": "Nuire" },
+    { "tense2": "يَجْرَحُ / جَرَحَ / جَرْح", "tense1": "Blesser" },
+    { "tense2": "يَتَشَاجَرُ / تَشَاجَرَ / تَشَاجُر", "tense1": "Se disputer" },
+    { "tense2": "يَخْتَفِي / اِخْتَفَى / اِخْتِفَاء", "tense1": "Disparaître" },
+    { "tense2": "يُقَبِّلُ / قَبَّلَ / تَقْبِيل", "tense1": "Embrasser" },
+    { "tense2": "يُعْجِبُ / أَعْجَبَ / إِعْجَاب", "tense1": "Apprécier" },
+    { "tense2": "يَعْشَقُ / عَشِقَ / عِشْق", "tense1": "Adorer" },
+    { "tense2": "يَوَدُّ / وَدَّ / وُدّ", "tense1": "Souhaiter" },
+    { "tense2": "يَرْغَبُ / رَغِبَ / رَغْبَة", "tense1": "Désirer" },
+    { "tense2": "يَتَلَقَّى / تَلَقَّى / تَلَقِّي", "tense1": "Recevoir" },
+    { "tense2": "يَلْتَقِي / اِلْتَقَى / اِلْتِقَاء", "tense1": "Se réunir" },
+    { "tense2": "يُلْقِي / أَلْقَى / إِلْقَاء", "tense1": "Jeter" },
+    { "tense2": "يُعَذِّبُ / عَذَّبَ / تَعْذِيب", "tense1": "Torturer" },
+    { "tense2": "يُطَارِدُ / طَارَدَ / مُطَارَدَة", "tense1": "Poursuivre" },
+    { "tense2": "يُحَرِّرُ / حَرَّرَ / تَحْرِير", "tense1": "Libérer" },
+    { "tense2": "يُجْبِرُ / أَجْبَرَ / إِجْبَار", "tense1": "Forcer" },
+    { "tense2": "يُولَدُ / وُلِدَ / وِلَادَة", "tense1": "Naître" },
+    { "tense2": "يَنْجُو / نَجَا / نَجَاة", "tense1": "Survivre" },
+    { "tense2": "يُنَادِي / نَادَى / نِدَاء", "tense1": "Appeler" },
+    { "tense2": "يَتَحَوَّلُ / تَحَوَّلَ / تَحَوُّل", "tense1": "Se transformer" },
+    { "tense2": "يُصْبِحُ / أَصْبَحَ / إِصْبَاح", "tense1": "Devenir" },
+    { "tense2": "يَسْتَبْدِلُ / اِسْتَبْدَلَ / اِسْتِبْدَال", "tense1": "Remplacer" },
+    { "tense2": "يَلْتَقِطُ / اِلْتَقَطَ / اِلْتِقَاط", "tense1": "Capturer" },
+    { "tense2": "يُسَلِّمُ / سَلَّمَ / تَسْلِيم", "tense1": "Livrer" },
+    { "tense2": "يَقْتَرِحُ / اِقْتَرَحَ / اِقْتِرَاح", "tense1": "Proposer" },
+    { "tense2": "يُسَخِّنُ / سَخَّنَ / تَسْخِين", "tense1": "Chauffer" },
+    { "tense2": "يَذُوبُ / ذَابَ / ذَوَبَان", "tense1": "Fondre" },
+    { "tense2": "يَحْرِقُ / حَرَقَ / حَرْق", "tense1": "Brûler" },
+    { "tense2": "يَتَجَنَّبُ / تَجَنَّبَ / تَجَنُّب", "tense1": "Éviter" },
+    { "tense2": "يَنْدَمِجُ / اِنْدَمَجَ / اِنْدِمَاج", "tense1": "Fusionner" },
+    { "tense2": "يَخْتَلِطُ / اِخْتَلَطَ / اِخْتِلَاط", "tense1": "Mélanger" },
+    { "tense2": "يَخْلُقُ / خَلَقَ / خَلْق", "tense1": "Créer" },
+    { "tense2": "يَقْبَلُ / قَبِلَ / قَبُول", "tense1": "Accepter" },
+    { "tense2": "يَدْعَمُ / دَعَمَ / دَعْم", "tense1": "Supporter" },
+    { "tense2": "يَعْتَنِي / اِعْتَنَى / اِعْتِنَاء", "tense1": "Prendre soin de" },
+    { "tense2": "يَتَحَقَّقُ / تَحَقَّقَ / تَحَقُّق", "tense1": "Vérifier" },
+    { "tense2": "يَصْرُخُ / صَرَخَ / صُرَاخ", "tense1": "Crier" },
+    { "tense2": "يُغْلِقُ / أَغْلَقَ / إِغْلَاق", "tense1": "Fermer" },
+    { "tense2": "يُزْعِجُ / أَزْعَجَ / إِزْعَاج", "tense1": "Embêter" },
+    { "tense2": "يُدْرِكُ / أَدْرَكَ / إِدْرَاك", "tense1": "Réaliser" },
+    { "tense2": "يَتَّهِمُ / اِتَّهَمَ / اِتِّهَام", "tense1": "Accuser" },
+    { "tense2": "يُهَدِّدُ / هَدَّدَ / تَهْدِيد", "tense1": "Menacer" },
+    { "tense2": "يَعْتَبِرُ / اِعْتَبَرَ / اِعْتِبَار", "tense1": "Considérer" },
+    { "tense2": "يَخْفِضُ / خَفَضَ / خَفْض", "tense1": "Réduire" },
+    { "tense2": "يَتَقَدَّمُ / تَقَدَّمَ / تَقَدُّم", "tense1": "Progresser" },
+    { "tense2": "يَتَحَسَّنُ / تَحَسَّنَ / تَحَسُّن", "tense1": "Améliorer" },
+    { "tense2": "يَتَخَمَّنُ / تَخَمَّنَ / تَخْمِين", "tense1": "Deviner" },
+    { "tense2": "يَتَخَيَّلُ / تَخَيَّلَ / تَخَيُّل", "tense1": "Imaginer" },
+    { "tense2": "يَعْتَمِدُ / اِعْتَمَدَ / اِعْتِمَاد", "tense1": "Dépendre" },
+    { "tense2": "يَتَغَلَّبُ / تَغَلَّبَ / تَغَلُّب", "tense1": "Vaincre" },
+    { "tense2": "يُلْغِي / أَلْغَى / إِلْغَاء", "tense1": "Annuler" },
+    { "tense2": "يُحْبِطُ / أَحْبَطَ / إِحْبَاط", "tense1": "Frustrer" },
+    { "tense2": "يَسْتَلْقِي / اِسْتَلْقَى / اِسْتِلْقَاء", "tense1": "S'allonger" },
+    { "tense2": "يَتَوَقَّعُ / تَوَقَّعَ / تَوَقُّع", "tense1": "Prévoir" },
+    { "tense2": "يُوَقِّعُ / وَقَّعَ / تَوْقِيع", "tense1": "Signer" },
+    { "tense2": "يُؤَكِّدُ / أَكَّدَ / تَأْكِيد", "tense1": "Confirmer" },
+    { "tense2": "يَبْتَكِرُ / اِبْتَكَرَ / اِبْتِكَار", "tense1": "Inventer" },
+    { "tense2": "يَسْتَهْلِكُ / اِسْتَهْلَكَ / اِسْتِهْلَاك", "tense1": "Consommer" },
+    { "tense2": "يَحْمِي / حَمَى / حِمَايَة", "tense1": "Protéger" },
+    { "tense2": "يُؤْلِمُ / آلَمَ / إِيلَام", "tense1": "Faire mal" },
+    { "tense2": "يَقْصِدُ / قَصَدَ / قَصْد", "tense1": "Avoir l'intention de" },
+    { "tense2": "يُعَالِجُ / عَالَجَ / مُعَالَجَة", "tense1": "Soigner" },
+    { "tense2": "يُخَفِّفُ / خَفَّفَ / تَخْفِيف", "tense1": "Soulager" },
+    { "tense2": "يَصِفُ / وَصَفَ / وَصْف", "tense1": "prescrire" },
+    { "tense2": "يَحْتَرِمُ / اِحْتَرَمَ / اِحْتِرَام", "tense1": "Respecter" },
+    { "tense2": "يُجْرِي / أَجْرَى / إِجْرَاء", "tense1": "Effectuer" },
+    { "tense2": "يَسِيرُ / سَارَ / سَيْر", "tense1": "Se passer" },
+    { "tense2": "يُكَرِّسُ / كَرَّسَ / تَكْرِيس", "tense1": "Dédier" },
+    { "tense2": "يُلْحِقُ / أَلْحَقَ / إِلْحَاق", "tense1": "Attacher" },
+    { "tense2": "يُصَلِّي / صَلَّى / صَلَاة", "tense1": "Prier" },
+    { "tense2": "يُدَخِّنُ / دَخَّنَ / تَدْخِين", "tense1": "Fumer" },
+    { "tense2": "يَتَنَفَّسُ / تَنَفَّسَ / تَنَفُّس", "tense1": "Respirer" },
+    { "tense2": "يَتَجَاوَزُ / تَجَاوَزَ / تَجَاوُز", "tense1": "Dépasser/doubler" }
+];
+
+const words = [
+{ "tense2": "فرصة", "tense1": "Opportunité" },
+{ "tense2": "مرشح", "tense1": "Candidat" },
+{ "tense2": "شارك", "tense1": "Participer" },
+{ "tense2": "شارك", "tense1": "Partager" },
+{ "tense2": "نظم", "tense1": "Organiser" },
+{ "tense2": "لجذب الناس", "tense1": "Pour attirer les gens" },
+{ "tense2": "الاستخدام", "tense1": "L'utilisation" },
+{ "tense2": "يستأجر", "tense1": "Louer (présent)" },
+{ "tense2": "استأجر", "tense1": "Louer (passé)" },
+{ "tense2": "استعاد", "tense1": "Récupérer" },
+{ "tense2": "حامل", "tense1": "Enceinte (femme enceinte)" },
+{ "tense2": "سماعة", "tense1": "Enceinte (audio)" },
+{ "tense2": "واحد تلو الآخر", "tense1": "Les uns après les autres" },
+{ "tense2": "مقدم البرنامج", "tense1": "Présentateur" },
+{ "tense2": "يجيب", "tense1": "Répondre (présent)" },
+{ "tense2": "أجاب", "tense1": "Répondre (passé)" },
+{ "tense2": "هذا قصير جداً لتكوين رأي قوي", "tense1": "C'est trop court pour se faire une opinion solide" },
+{ "tense2": "النمو الاقتصادي", "tense1": "Croissance économique" },
+{ "tense2": "زيادة", "tense1": "Ziyada" },
+{ "tense2": "من هو أفضل متحدث؟", "tense1": "Qui est le meilleur orateur?" },
+{ "tense2": "تقديم", "tense1": "Présenter" },
+{ "tense2": "تقديم", "tense1": "Offrir" },
+{ "tense2": "لم ترغب صديقتي في الذهاب للتصويت بسبب الحرارة", "tense1": "Ma copine n'a pas voulu aller voter à cause de la chaleur" },
+{ "tense2": "لأن صوتا واحدا لن يغير الأمور", "tense1": "Parce qu'un seul vote ne changera pas les choses" },
+{ "tense2": "شرب", "tense1": "Boire" },
+{ "tense2": "حساب", "tense1": "Compter" },
+{ "tense2": "صب", "tense1": "Verser" },
+{ "tense2": "أنا حار جداً", "tense1": "J'ai très chaud" },
+{ "tense2": "هو ينزف", "tense1": "Il saigne" },
+{ "tense2": "تسأله أين كان", "tense1": "Elle lui demande où il était" },
+{ "tense2": "أفضل تلميذ", "tense1": "Le meilleur élève" },
+{ "tense2": "قليلاً قليلاً", "tense1": "Petit à petit" },
+{ "tense2": "استخراج", "tense1": "Extraire" },
+{ "tense2": "خالد", "tense1": "Immortel" },
+{ "tense2": "ثلاثة عشر زائد خمسة عشر يساوي ثمانية وثلاثون", "tense1": "Treize plus quinze égale vingt-huit" },
+{ "tense2": "إجراء عمليات", "tense1": "Faire des opérations" },
+{ "tense2": "بري", "tense1": "Sauvage" },
+{ "tense2": "بعيد", "tense1": "Lointain" },
+{ "tense2": "قطع", "tense1": "Morceaux" },
+{ "tense2": "روح", "tense1": "Âme" },
+{ "tense2": "إذا تم تدميرها، يموت", "tense1": "Si ils sont détruits, il meurt" },
+{ "tense2": "جرف", "tense1": "Falaise" },
+{ "tense2": "جزئين", "tense1": "Deux parties" },
+{ "tense2": "كهف مخفي", "tense1": "Une cave cachée" },
+{ "tense2": "الوصول إلى", "tense1": "Accéder à" },
+{ "tense2": "الماء مسموم", "tense1": "L'eau est empoisonnée" },
+{ "tense2": "ألم شديد", "tense1": "Douleur intense" },
+{ "tense2": "أمر", "tense1": "Ordonner" },
+{ "tense2": "سبعة أشياء", "tense1": "Sept objets" },
+{ "tense2": "مخفي", "tense1": "Caché" },
+{ "tense1": "Ils les a caché", "tense2": "قام بإخفائهم" },
+{ "tense1": "Défaut", "tense2": "عيب" },
+{ "tense1": "Commettre une erreur", "tense2": "يَجْتَكِبَ خطأ" },
+{ "tense1": "Traître", "tense2": "غادرة،" },
+{ "tense1": "Maximum", "tense2": "الأقصى" },
+{ "tense1": "Outil", "tense2": "أداة (adāh)" },
+{ "tense1": "Matériau", "tense2": "مادة" },
+{ "tense1": "Faire confiance", "tense2": "الثقة (althuqa)" },
+{ "tense1": "culture", "tense2": "ثقافة" },
+{ "tense1": "Surprise", "tense2": "مفاجأة (mufāja'a)" },
+{ "tense1": "Espion", "tense2": "جاسوس (jāsūs)" },
+{ "tense1": "Le moment le plus triste", "tense2": "اللحظة الأكثر حزنًا (al-lahza al-akthar huznan)" },
+{ "tense1": "Lever", "tense2": "رفع (rafa')" },
+{ "tense1": "Extrémité", "tense2": "نهاية (nihāyah)" },
+{ "tense1": "Éliminer", "tense2": "التخلص من (altakhallus min)" },
+{ "tense1": "Révéler", "tense2": "كشف (kašf)" },
+{ "tense1": "Différence", "tense2": "اختلاف (ikhtilaf)" },
+{ "tense1": "Auteur", "tense2": "مؤلف (mu'allif)" },
+{ "tense1": "Derrière", "tense2": "خلف (khalf)" },
+{ "tense1": "Décision", "tense2": "قرار (qarar)" },
+{ "tense1": "Il a moins de 200 pages", "tense2": "عدد صفحاته أقل من 200 صفحة (عدد صفحاته أقل من 200 صفحة)" },
+{ "tense1": "Sept cent", "tense2": "سبعمائة (sab'umi'a)" },
+{ "tense1": "Les spectateurs", "tense2": "المشاهدون (al-mushahidun)" },
+{ "tense1": "Ça représente beaucoup d'argent", "tense2": "هذا يمثل الكثير من المال (hatha yumathil al-kathir min al-mal)" },
+{ "tense1": "Le film qui a remporté le plus d'argent est le dernier", "tense2": "الفيلم الذي حصل على أكبر قدر من المال هو الأخير (al-film alladhi hasala 'ala akbar qadr min al-mal huwa al-akhir)" },
+{ "tense1": "حصل (au passé)", "tense2": "Obtenu" },
+{ "tense1": "قدر من المال", "tense2": "Quantité d'argent" },
+{ "tense1": "Diviser (présent)", "tense2": "يقسِّم (yaqsim)" },
+{ "tense1": "Divisé (passé)", "tense2": "قسّم (qassama)" },
+{ "tense1": "Au lieu de gagner un milliard, ils ont gagné deux milliards", "tense2": "بدلاً من كسب مليار، حصلوا على مليارين (Badlan min kasb milyar, hasalu 'ala milyarayn)" },
+{ "tense1": "Essence", "tense2": "بِنْزِين (benzin)" },
+{ "tense1": "Billet (monnaie)", "tense2": "ورقة نقدية (waraqa naqdiyya)" },
+{ "tense1": "Cadeaux", "tense2": "هدايا (hadiya)" },
+{ "tense1": "Promenade", "tense2": "نزهة (nazha)" },
+{ "tense1": "Cascade", "tense2": "شلال (shilal)" },
+{ "tense1": "Couter", "tense2": "كَلَّفَ (kallafa)" },
+{ "tense1": "Scène de film", "tense2": "مشهد من فيلم" },
+{ "tense1": "Installer", "tense2": "نصب" },
+{ "tense1": "Despedirse", "tense2": "يودع" },
+{ "tense1": "Tente", "tense2": "خيمة (khaymah)" },
+{ "tense1": "Inviter (présent)", "tense2": "يدعو (yadu'u)" },
+{ "tense1": "Inviter (passé)", "tense2": "دعا (da'a)" },
+{ "tense1": "Vieux (informel)", "tense2": "عجوز (ajuz)" },
+{ "tense1": "Gâcher", "tense2": "إفساد (ifsad)" },
+{ "tense1": "Plaza (place publique)", "tense2": "ساحة (sahah)" },
+{ "tense1": "Plaza (centre commercial)", "tense2": "سوق (souq) ou مركز تجاري (markaz tijari)" },
+{ "tense1": "Étage", "tense2": "طابق (tabaq)" },
+{ "tense1": "Trottoir", "tense2": "رصيف (rasif)" },
+{ "tense1": "Vivre (passé)", "tense2": "عاش (aasha)" },
+{ "tense1": "Il ne sait pas quoi commander", "tense2": "لا يعرف ماذا يطلب (la ya'rifu mada yatlub)" },
+{ "tense1": "Pour les attraper", "tense2": "للقبض عليهم (lilqabd 'alayhim)" },
+{ "tense1": "Vacances", "tense2": "عطلة (utla)" },
+{ "tense1": "Récompense", "tense2": "مكافأة (mokafaa)" },
+{ "tense1": "Collier", "tense2": "قلادة (qalada)" },
+{ "tense1": "C'est un faux", "tense2": "هذا مزيف (hatha maziif)" },
+{ "tense1": "Signature", "tense2": "توقيع (tawqīʿ)" },
+{ "tense1": "Déterminer", "tense2": "تحديد (tahdeed)" },
+{ "tense1": "Attraper", "tense2": "أمسك" },
+{ "tense1": "Bras", "tense2": "ذراع (dhira’a)" },
+{ "tense1": "Nuir", "tense2": "آذَى / يُؤذِّي" },
+{ "tense1": "Blesser", "tense2": "جرح (jarah)" },
+{ "tense1": "Un juge", "tense2": "قاضٍ" },
+{ "tense1": "Cou", "tense2": "رقبة" },
+{ "tense1": "Une dispute", "tense2": "مشاجرة" },
+{ "tense1": "insecte", "tense2": "حشرة" },
+{ "tense1": "Ron est jaloux de Harry", "tense2": "رون يغار من هاري" },
+{ "tense1": "Se disputer", "tense2": "يتشاجر" },
+{ "tense1": "Il disparaît", "tense2": "يختفي" },
+{ "tense1": "Souvent", "tense2": "غالبًا" },
+{ "tense1": "Embrasser", "tense2": "يُقَبِّل" },
+{ "tense1": "Un match", "tense2": "مباراة" },
+{ "tense1": "أَعْجَبَ (aʿjaba)", "tense2": "apprécier, plaire" },
+{ "tense1": "عَشِقَ (ʿashiqa)", "tense2": "adorer" },
+{ "tense1": "وَدَّ", "tense2": "souhaiter" },
+{ "tense1": "Juste avant", "tense2": "قبل قليل" },
+{ "tense1": "Juste après", "tense2": "بعد قليل / فور" },
+{ "tense1": "désirer", "tense2": "يرغب" },
+{ "tense1": "recevoir", "tense2": "يتلقى / تلقى" },
+{ "tense1": "Congelé", "tense2": "مجمد" },
+{ "tense1": "Se réunir/quedar", "tense2": "يلتقي / التقى" },
+{ "tense1": "Recevoir", "tense2": "يتلقى / تلقى" },
+{ "tense1": "Jeter", "tense2": "أَلْقَى / يُلْقِي" },
+{ "tense1": "Nuage", "tense2": "سحاب" },
+{ "tense1": "Piscine", "tense2": "سباحة" },
+{ "tense1": "ciel", "tense2": "سماء" },
+{ "tense1": "Livreur", "tense2": "موصل" },
+{ "tense1": "torturer", "tense2": "تعذيب" },
+{ "tense1": "poursuivre", "tense2": "ملاحقة / يطارد" },
+{ "tense1": "libérer", "tense2": "تحرير" },
+{ "tense1": "Être sur le point le", "tense2": "كان على وشك" },
+{ "tense1": "Tout juste de", "tense2": "للتو" },
+{ "tense1": "Sinon", "tense2": "إلا" },
+{ "tense1": "Forcer", "tense2": "يجبر / جبر" },
+{ "tense1": "Il a failli mourir", "tense2": "لقد كاد أن يموت" },
+{ "tense1": "Stricte", "tense2": "صارم (ṣārim)" },
+{ "tense1": "Naître", "tense2": "وُلِدَ (wulida)" },
+{ "tense1": "Survivre", "tense2": "نجا / يَنْجُو" },
+{ "tense1": "cimetière", "tense2": "مقبرة" },
+{ "tense1": "tombe", "tense2": "قبر" },
+{ "tense1": "Église", "tense2": "كنيسة (prononcé : kanīsa)" },
+{ "tense1": "balaie", "tense2": "مِكْنَسَة" },
+{ "tense1": "Alarme", "tense2": "إنذار (prononcé : inthār)" },
+{ "tense1": "Appeler", "tense2": "أنادى / يُنادي" },
+{ "tense1": "Inconnue", "tense2": "مجهول" },
+{ "tense1": "Se transformer", "tense2": "تحول / أصبح" },
+{ "tense1": "Serpent", "tense2": "ثعبان" },
+{ "tense1": "lézard", "tense2": "سحلية" },
+{ "tense1": "Surface", "tense2": "السطح،" },
+{ "tense1": "Toit", "tense2": "السقف" },
+{ "tense1": "tromper", "tense2": "خداع" },
+{ "tense1": "heureux", "tense2": "سعيد" },
+{ "tense1": "Remplacer", "tense2": "استبدل / يستبدل" },
+{ "tense1": "capturer", "tense2": "التقطَ / يلتقطُ" },
+{ "tense1": "Livrer", "tense2": "يسلم" },
+{ "tense1": "proposer", "tense2": "يقترح / أقترح" },
+{ "tense1": "quantité", "tense2": "كمية" },
+{ "tense1": "tasse", "tense2": "كوب" },
+{ "tense1": "casserole", "tense2": "قدر" },
+{ "tense1": "chauffer", "tense2": "يسخن" },
+{ "tense1": "fondre", "tense2": "يذوب / ذاب" },
+{ "tense1": "bruler", "tense2": "يحرق" },
+{ "tense1": "Éviter", "tense2": "يتجنب" },
+{ "tense1": "conditionel", "tense2": "ماضي + مستقبل" },
+{ "tense1": "dure", "tense2": "متين / قاسٍ" },
+{ "tense1": "fusionner", "tense2": "يَندَمِج" },
+{ "tense1": "Marron", "tense2": "بني" },
+{ "tense1": "Mélanger", "tense2": "يختلط" },
+{ "tense1": "Fondu", "tense2": "مذاب" },
+{ "tense1": "créer", "tense2": "خلق" },
+{ "tense1": "ubicación", "tense2": "موقع" },
+{ "tense1": "accepter", "tense2": "قبلَ / يقبل" },
+{ "tense1": "Épuisé", "tense2": "مُرهَق" },
+{ "tense1": "adolescent", "tense2": "مراهق" },
+{ "tense1": "émotion", "tense2": "إحساس" },
+{ "tense1": "étape", "tense2": "مرحلة" },
+{ "tense1": "Supporter", "tense2": "يدعمُ" },
+{ "tense1": "Prendre soin de", "tense2": "اعتنى" },
+{ "tense1": "ennemie", "tense2": "عدو" },
+{ "tense1": "Vérifier", "tense2": "تحقق" },
+{ "tense1": "bloqué", "tense2": "عالق" },
+{ "tense1": "crier", "tense2": "صرخ" },
+{ "tense1": "fermer", "tense2": "يغلق / أغلق" },
+{ "tense1": "Embêter", "tense2": "يزعج / أزعج" },
+{ "tense1": "célèbre", "tense2": "شهرة" },
+{ "tense1": "réaliser", "tense2": "أدرك أن" },
+{ "tense1": "distance", "tense2": "مسافة" },
+{ "tense1": "Accuser", "tense2": "اتهم / يتهم (yattahim)" },
+{ "tense1": "Menacer", "tense2": "هدد / يهدد (yuhaddid)" },
+{ "tense1": "Casque", "tense2": "خوذة (khawdha)" },
+{ "tense1": "Considérer", "tense2": "اعتبر / يعتبر (ya'tabir)" },
+{ "tense1": "Jaloux", "tense2": "غيور (ghayour)" },
+{ "tense1": "Récemment", "tense2": "مؤخرًا (mu'akhkharan)" },
+{ "tense1": "Coupable", "tense2": "مذنب (muthnib)" },
+{ "tense1": "Escalier", "tense2": "سُلَّم (sullam)" },
+{ "tense1": "Moins fort/plus bas", "tense2": "أخفض" },
+{ "tense1": "réduire", "tense2": "خفض" },
+{ "tense1": "décoration", "tense2": "زخرفة / تزيين" },
+{ "tense1": "adulte", "tense2": "بالغ" },
+{ "tense1": "progresser", "tense2": "تقدَّم" },
+{ "tense1": "Améliorer", "tense2": "تحسّن" },
+{ "tense1": "Deviner", "tense2": "تخمنَ / هو يتخمن (huwa yatakhmen)" },
+{ "tense1": "Imaginer", "tense2": "تخيلَ / هو يتخيل (huwa yatakhayyal)" },
+{ "tense1": "Dépendre de", "tense2": "يعتمد على" },
+{ "tense1": "vaincre", "tense2": "تَغَلَّبَ" },
+{ "tense1": "Annuler", "tense2": "أَلْغَى / يُلْغِي" },
+{ "tense1": "honte", "tense2": "خجل" },
+{ "tense1": "frustrer", "tense2": "أحبط" },
+{ "tense1": "Ventilateur", "tense2": "مِرْوَحَة" },
+{ "tense1": "s’allonger", "tense2": "استلقى" },
+{ "tense1": "spectacle", "tense2": "عرض" },
+{ "tense1": "Heureusement", "tense2": "لِحُسْنِ الحَظّ" },
+{ "tense1": "prévoir", "tense2": "تَوَقَّعَ" },
+{ "tense1": "Signer", "tense2": "وَقَّعَ" },
+{ "tense1": "Être situé", "tense2": "وَقَّعَ" },
+{ "tense1": "documents", "tense2": "وَثِيقَة" },
+{ "tense1": "Présence", "tense2": "حُضُورِ" },
+{ "tense1": "Existence", "tense2": "وجود" },
+{ "tense1": "Confirmer/valider", "tense2": "أكدَ / يُؤكِّدُ" },
+{ "tense1": "planète", "tense2": "كوكب" },
+{ "tense1": "miracle", "tense2": "معجزة (muʿjiza)" },
+{ "tense1": "rare", "tense2": "نادر" },
+{ "tense1": "inventer", "tense2": "ابتكر" },
+{ "tense1": "public", "tense2": "جمهور" },
+{ "tense1": "Vrai/faux", "tense2": "غلط / صح" },
+{ "tense1": "Fan", "tense2": "معجب" },
+{ "tense1": "Salaire", "tense2": "راتب" },
+{ "tense1": "Rendez-vous", "tense2": "موعد" },
+{ "tense1": "Réunion", "tense2": "اجتماع" },
+{ "tense1": "Horaire", "tense2": "جدول" },
+{ "tense1": "chaleur", "tense2": "الحرارة" },
+{ "tense1": "Chaud", "tense2": "ساخن" },
+{ "tense1": "Côte", "tense2": "ساحل" },
+{ "tense1": "USA", "tense2": "الولايات المتحدة" },
+{ "tense1": "capteur", "tense2": "مستشعر" },
+{ "tense1": "Plus tu apprends une langue tôt, plus tu seras bon", "tense2": "كلما تعلمت لغة في وقتٍ مُبَكِّر، كلما كنت جيدًا" },
+{ "tense1": "Consommer", "tense2": "استهلك / يستهلك" },
+{ "tense1": "Protéger", "tense2": "يحمي / حمى" },
+{ "tense1": "Faire mal", "tense2": "يؤلم" },
+{ "tense1": "Avoir l’intention de", "tense2": "يقصد / أقصد" },
+{ "tense1": "Soif", "tense2": "عطش" },
+{ "tense1": "Génération", "tense2": "جيل" },
+{ "tense1": "Poche", "tense2": "جيب" },
+{ "tense1": "Peau", "tense2": "جلد" },
+{ "tense1": "corps", "tense2": "جسم" },
+{ "tense1": "Rempli de", "tense2": "مليئة بـ" },
+{ "tense1": "Traitement", "tense2": "علاج" },
+{ "tense1": "Médicament", "tense2": "دواء" },
+{ "tense1": "Soigner", "tense2": "يعالج / عالجَ" },
+{ "tense1": "Infirmière", "tense2": "ممرضة" },
+{ "tense1": "Soulager", "tense2": "يخفف / خفّفَ" },
+{ "tense1": "prescrire", "tense2": "وصف" },
+{ "tense1": "Respecter", "tense2": "يحترم / احترمَ" },
+{ "tense1": "Effectuer", "tense2": "يُجري / قد أُجري" },
+{ "tense1": "Se passer", "tense2": "سَارَ / يَسِيرُ" },
+{ "tense1": "pharmacie", "tense2": "صيدلية" },
+{ "tense1": "Dédier", "tense2": "كرَّسَ / يُكَرِّسُ" },
+{ "tense1": "Blessure", "tense2": "إصابة" },
+{ "tense1": "Accident", "tense2": "حادث" },
+{ "tense1": "Évènement", "tense2": "حدث" },
+{ "tense1": "Jambe", "tense2": "ساق" },
+{ "tense1": "Intention", "tense2": "نية" },
+{ "tense1": "Indépendance", "tense2": "استقلال" },
+{ "tense1": "Attacher", "tense2": "ألحق" },
+{ "tense1": "Chauffeur", "tense2": "سائق" },
+{ "tense1": "Monument", "tense2": "نُصُب" },
+{ "tense1": "Chic", "tense2": "أنيق" },
+{ "tense1": "Prier", "tense2": "صَلَّى / يُصَلِّي" },
+{ "tense1": "Cigarette", "tense2": "سيجارة" },
+{ "tense1": "Fumer", "tense2": "دَخَّنَ / يُدَخِّنُ" },
+{ "tense1": "Fumée", "tense2": "دُخَان" },
+{ "tense1": "Toxique", "tense2": "سَامّ" },
+{ "tense1": "Respirer", "tense2": "تَنَفَّسَ" },
+{ "tense1": "Loi", "tense2": "قَانُون" },
+{ "tense1": "Effet", "tense2": "تَأْثِير" },
+{ "tense1": "Négatif", "tense2": "سَلْبِيّ" },
+{ "tense1": "Scientifique", "tense2": "علمي" },
+{ "tense1": "Dépasser/doubler", "tense2": "تَجَاوَزَ / يَتَجَاوَزُ" },
+{ "tense1": "Collision", "tense2": "اصطدام" },
+{ "tense1": "Élection", "tense2": "انتخاب" }
+];
+
+
+let currentList = [];
+        let currentWordIndex = 0;
+        let remainingWords = 0;
+        this.currentListNumber = 0;
+
+        function createWordLists() {
+            const wordLists = document.getElementById('wordLists');
+
+            const listItem = document.createElement('a');
+                listItem.href = '#';
+                listItem.className = 'list-group-item list-group-item-action';
+                listItem.innerText = `Aleatorio`;
+                const completions = getLocalStorage(`list0`) || 0;
+                listItem.innerText += ` (Completedo ${completions} veces)`;
+                listItem.onclick = () => startList(-1, -1, 0);
+                wordLists.appendChild(listItem);
+
+            for (let i = 0; i < words.length; i += 30) {
+                const listNumber = Math.floor(i / 30) + 1;
+                const listItem = document.createElement('a');
+                listItem.href = '#';
+                listItem.className = 'list-group-item list-group-item-action';
+                listItem.innerText = `Listado ${listNumber}`;
+                const completions = getLocalStorage(`list${listNumber}`) || 0;
+                listItem.innerText += ` (Completedo ${completions} veces)`;
+                listItem.onclick = () => startList(i, i + 30, listNumber);
+                wordLists.appendChild(listItem);
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startList(start, end, listNumber) {
+            if (listNumber == 0) {
+                for (let i = 0; i < 30; i++) {
+                    const randomIndex = Math.floor(Math.random() * words.length);
+                    currentList.push(words[randomIndex]);
+                }
+            } else {
+                currentList = words.slice(start, end);
+                shuffle(currentList);
+            }
+            
+
+            remainingWords = currentList.length;
+            currentWordIndex = 0;
+            this.currentListNumber = listNumber; // Store the list number
+            showNextWord();
+            document.getElementById('wordLists').style.display = 'none';
+            document.getElementById('wordCard').style.display = 'block';
+            updateProgress();
+        }
+
+        function showNextWord() {
+            if (currentWordIndex < currentList.length) {
+                const word = currentList[currentWordIndex];
+                const isTense1 = Math.random() < 0.5;
+                document.getElementById('currentWord').innerText = isTense1 ? word.tense1 : word.tense2;
+                document.getElementById('translation').innerText = isTense1 ? word.tense2 : word.tense1;
+                document.getElementById('translation').style.display = 'none';
+            } else {
+                finishList();
+            }
+        }
+
+        function verifyWord() {
+            document.getElementById('translation').style.display = 'block';
+        }
+
+        function markWord(status) {
+            if (status === 'KO') {
+                currentList.push(currentList[currentWordIndex]);
+            } else {
+                remainingWords--;
+            }
+            currentWordIndex++;
+            showNextWord();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            document.getElementById('progress').innerText = `${remainingWords}/30`;
+        }
+
+        function finishList() {
+            const completions = parseInt(getLocalStorage(`list${this.currentListNumber}`)) || 0;
+            setLocalStorage(`list${this.currentListNumber}`, completions + 1);
+            alert('Bravo! Completaste la lista !');
+            document.getElementById('wordCard').style.display = 'none';
+            document.getElementById('wordLists').style.display = 'block';
+            createWordLists(); // Refresh the list to show updated completion count
+        }
+
+        function setLocalStorage(name, value) {
+            localStorage.setItem(name, value);
+        }
+
+        function getLocalStorage(name) {
+            return localStorage.getItem(name);
+        }
+
+        createWordLists();
+
+     
+
+        function showRandomVerb() {
+            // Generate random pronoun and tense
+
+            // Select a random verb from the verbs array
+            var randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
+            var randomPronoun = pronouns[Math.floor(Math.random() * pronouns.length)];
+            var randomTense = tenses[Math.floor(Math.random() * tenses.length)];
+
+            // Update the HTML elements with the random verb
+            document.getElementById("randomVerb").textContent = randomPronoun + " " + randomVerb.tense1 ;
+            document.getElementById("tense2Verb").textContent = randomVerb.tense2;
+            document.getElementById("randomTense").textContent = randomTense.name;
+            document.getElementById("hintText").textContent = randomTense.hint;
+
+            // Determine if to add "(negative)"
+            var includeNegative = Math.random() <= 0.2; // 20% chance
+            
+            if (includeNegative) {
+                document.getElementById("randomNegative").textContent = "(Negation)";
+            } else {
+                document.getElementById("randomNegative").textContent = "";
+            } 
+        }
+
+        function clearContent() {
+            document.getElementById("randomVerb").textContent = "" ;
+            document.getElementById("tense2Verb").textContent = "";
+            document.getElementById("randomTense").textContent = "";
+            document.getElementById("randomNegative").textContent = "";
+        }
+
+        var timerInterval;
+        var score = 0;
+        var timeLeft = 60; // 60 seconds
+
+        function startGame() {
+            resetGame();
+            document.getElementById("startBtn").style.display = "none";
+            document.getElementById("resetBtn").style.display = "inline-block";
+            document.getElementById("nextBtn").style.display = "inline-block";
+            document.getElementById("hintBtn").style.display = "inline-block";
+            document.getElementById("hintBtn").textContent = "hint";
+
+            
+            showRandomVerb();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById("timer").textContent = timeLeft;
+
+            if (timeLeft === 0) {
+                endGame();
+            }
+        }
+
+        function NextVerb() {
+            
+            score++;
+            document.getElementById("score").textContent = score;
+            showRandomVerb();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("resetBtn").style.display = "none";
+            document.getElementById("nextBtn").style.display = "none";
+            document.getElementById("hintBtn").style.display = "none";
+
+            clearContent();
+
+            alert("Game Over! Your score: " + score);
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            score = 0;
+            timeLeft = 60;
+            document.getElementById("score").textContent = score;
+            document.getElementById("timer").textContent = timeLeft;
+            document.getElementById("startBtn").style.display = "inline-block";
+            document.getElementById("resetBtn").style.display = "none";
+            document.getElementById("nextBtn").style.display = "none";
+            document.getElementById("hintBtn").style.display = "none";
+
+            clearContent();
+        }
+
+
+        function closeHint() {
+            document.getElementById("hint").style.display = "none";
+        }
+
+        function showHint() {
+            document.getElementById("hint").style.display = "inline-block";
+        }
+        
+        function refreshImage() {
+            // Example API endpoint to fetch a random image from Lorem Picsum
+            const width = 400; // Specify image width
+            const height = 300; // Specify image height
+            const randomImageUrl = `https://picsum.photos/${width}/${height}?random=${Math.random()}`;
+
+            // Select the <img> element by its ID
+            const imgElement = document.getElementById('randomImage');
+
+            // Set the src attribute of the <img> element to the random image URL
+            imgElement.src = randomImageUrl;
+        }
+
+
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
