@@ -1558,6 +1558,7 @@
         let currentWordIndex = 0;
         let remainingWords = 0;
         this.currentListNumber = 0;
+        let listLength = 50;
 
         function createWordLists() {
             const wordLists = document.getElementById('wordLists');
@@ -1571,15 +1572,15 @@
                 listItem.onclick = () => startList(-1, -1, 0);
                 wordLists.appendChild(listItem);
 
-            for (let i = 0; i < get_words().length; i += 30) {
-                const listNumber = Math.floor(i / 30) + 1;
+            for (let i = 0; i < get_words().length; i += listLength) {
+                const listNumber = Math.floor(i / listLength) + 1;
                 const listItem = document.createElement('a');
                 listItem.href = '#';
                 listItem.className = 'list-group-item list-group-item-action';
                 listItem.innerText = `Listado ${listNumber}`;
                 const completions = getLocalStorage(`list${listNumber}_${get_language()}`) || 0;
                 listItem.innerText += ` (Completedo ${completions} veces)`;
-                listItem.onclick = () => startList(i, i + 30, listNumber);
+                listItem.onclick = () => startList(i, i + listLength, listNumber);
                 wordLists.appendChild(listItem);
             }
         }
@@ -1593,7 +1594,7 @@
 
         function startList(start, end, listNumber) {
             if (listNumber == 0) {
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i <listLength; i++) {
                     const randomIndex = Math.floor(Math.random() * get_words().length);
                     currentList.push(get_words()[randomIndex]);
                 }
@@ -1640,7 +1641,7 @@
         }
 
         function updateProgress() {
-            document.getElementById('progress').innerText = `${remainingWords}/30`;
+            document.getElementById('progress').innerText = `${remainingWords}/${listLength}`;
         }
 
         function finishList() {
