@@ -1,6 +1,6 @@
-const pronouns = ["je", "tu", "il", "elle", "nous", "vous", "ils", "elles"];
+const pronouns_french = ["je", "tu", "il", "elle", "nous", "vous", "ils", "elles"];
 
-const  tenses = [
+const  tenses_french = [
 { "name": "présent", "hint": "1er groupe: je parle, tu parles, il/elle/on parle, nous parlons, vous parlez, ils/elles parlent\n\n2ème groupe: je finis, tu finis, il/elle/on finit, nous finissons, vous finissez, ils/elles finissent\n\n3ème groupe: je vends, tu vends, il/elle/on vend, nous vendons, vous vendez, ils/elles vendent" },
 { "name": "imparfait", "hint": "1er groupe: je parlais, tu parlais, il/elle/on parlait, nous parlions, vous parliez, ils/elles parlaient\n\n2ème groupe: je finissais, tu finissais, il/elle/on finissait, nous finissions, vous finissiez, ils/elles finissaient\n\n3ème groupe: je vendais, tu vendais, il/elle/on vendait, nous vendions, vous vendiez, ils/elles vendaient" },
 { "name": "passé simple", "hint": "1er groupe: je parlai, tu parlas, il/elle/on parla, nous parlâmes, vous parlâtes, ils/elles parlèrent\n\n2ème groupe: je finis, tu finis, il/elle/on finit, nous finîmes, vous finîtes, ils/elles finirent\n\n3ème groupe: je vendis, tu vendis, il/elle/on vendit, nous vendîmes, vous vendîtes, ils/elles vendirent" },
@@ -15,7 +15,7 @@ const  tenses = [
 { "name": "gérondif", "hint": "1er groupe: en parlant\n\n2ème groupe: en finissant\n\n3ème groupe: en vendant" }
 ];
 
-const verbs = [
+const verbs_french = [
 { "tense1": "Encontrar", "tense2": "Trouver" },
 { "tense1": "Dar", "tense2": "Donner" },
 { "tense1": "Hablar", "tense2": "Parler" },
@@ -107,7 +107,7 @@ const verbs = [
 { "tense1": "Sufrir", "tense2": "Souffrir" }
 ];           
 
- const words = [
+ const words_french = [
 { "tense1": "Uno", "tense2": "Un" },
 { "tense1": "Dos", "tense2": "Deux" },
 { "tense1": "Tres", "tense2": "Trois" },
