@@ -105,7 +105,7 @@ var verbs = [
     { "tense2": "يَسْتَهْلِكُ / اِسْتَهْلَكَ / اِسْتِهْلَاك", "tense1": "Consommer" },
     { "tense2": "يَحْمِي / حَمَى / حِمَايَة", "tense1": "Protéger" },
     { "tense2": "يُؤْلِمُ / آلَمَ / إِيلَام", "tense1": "Faire mal" },
-    { "tense2": "يَقْصِدُ / قَصَدَ / قَصْد", "tense1": "Avoir l'intention de" },
+    { "tense2": "يَقْصِدُ / قَصَدَ / قَصْد", "tense1": "Vouloir dire" },
     { "tense2": "يُعَالِجُ / عَالَجَ / مُعَالَجَة", "tense1": "Soigner" },
     { "tense2": "يُخَفِّفُ / خَفَّفَ / تَخْفِيف", "tense1": "Soulager" },
     { "tense2": "يَصِفُ / وَصَفَ / وَصْف", "tense1": "prescrire" },
