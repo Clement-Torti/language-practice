@@ -5,4 +5,6 @@ var lista = [{"tense1":<mot français>, "tense2": <mot arabe> }
 Cuando la palabra arabe es un verbo, dame la forma basica pasada, presente, el verbo como nombre y la forma imperativa usando el formato:
 "tense2": "<pasado>/<presente>/<nombre>/<imperativo>/passif présent/passif passé"
 
+Inclue tous les accents en arabe.
+
 Aqui tienes la lista:
