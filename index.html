@@ -1797,7 +1797,7 @@ const verbs_french = [
                 listItem.href = '#';
                 listItem.className = 'list-group-item list-group-item-action';
                 listItem.innerText = `Aleatorio`;
-                const completions = getLocalStorage(`list0__${get_language()}`) || 0;
+                const completions = getLocalStorage(`list0_${get_language()}`) || 0;
                 listItem.innerText += ` (Completedo ${completions} veces)`;
                 listItem.onclick = () => startList(-1, -1, 0);
                 wordLists.appendChild(listItem);
