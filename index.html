@@ -126,7 +126,9 @@
                 <div class="card shadow-sm mt-3">
                     <div class="card-body">
                         <img id="randomImage" class="img-responsive" src="" alt="Random Image"><br/>
-                        <button class="btn btn-primary mt-3" onclick="refreshImage()">Refresh Image</button>
+                        <div id="randomWords" class="mt-3"></div>
+                        <p id="expressionTimer" class="mt-3">Time left: 5:00</p>
+                        <button class="btn btn-primary mt-3" onclick="refreshExpression()">Refresh Expression</button>
                     </div>
                 </div>
             </div>
@@ -1997,19 +1999,60 @@ const verbs_french = [
             document.getElementById("hint").style.display = "inline-block";
         }
         
-        refreshImage();
-        function refreshImage() {
-            // Example API endpoint to fetch a random image from Lorem Picsum
-            const width = 500; // Specify image width
-            const height = 400; // Specify image height
-            const randomImageUrl = `https://picsum.photos/${width}/${height}?random=${Math.random()}`;
 
-            // Select the <img> element by its ID
-            const imgElement = document.getElementById('randomImage');
+        // expression tab
+        let expressionTimerInterval;
 
-            // Set the src attribute of the <img> element to the random image URL
-            imgElement.src = randomImageUrl;
+        function refreshExpression() {
+            refreshImage();
+            displayRandomWords();
+            startExpressionTimer();
         }
+
+        function displayRandomWords() {
+            const words = get_words();
+            const randomWords = [];
+            for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(Math.random() * words.length);
+                randomWords.push(words[randomIndex].tense1);
+            }
+            document.getElementById('randomWords').innerHTML = randomWords.join(' - ');
+        }
+
+        function startExpressionTimer() {
+            clearInterval(expressionTimerInterval);
+            let timeLeft = 5 * 60; // 5 minutes in seconds
+
+            function updateExpressionTimer() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('expressionTimer').textContent = 
+                    `Time left: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft === 0) {
+                    clearInterval(expressionTimerInterval);
+                    alert("Time's up!");
+                } else {
+                    timeLeft--;
+                }
+            }
+
+            updateExpressionTimer();
+            expressionTimerInterval = setInterval(updateExpressionTimer, 1000);
+        }
+
+        // Modify the existing refreshImage function
+        function refreshImage() {
+            const width = 500;
+            const height = 400;
+            const randomImageUrl = `https://picsum.photos/${width}/${height}?random=${Math.random()}`;
+            document.getElementById('randomImage').src = randomImageUrl;
+        }
+
+        // Call refreshExpression instead of just refreshImage when the tab is loaded
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('expression-tab').addEventListener('click', refreshExpression);
+        });
 
 
     </script>
