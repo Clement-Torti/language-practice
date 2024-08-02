@@ -123,12 +123,14 @@
                 <button class="btn btn-danger mt-3" id="resetBtn" onclick="resetGame()" style="display: none;">Reset Game</button>
             </div>
             <div class="tab-pane fade" id="expression" role="tabpanel" aria-labelledby="expression-tab">
+                <span class="total" style="color: white;">Total: <span id="total_expression">0</span></span><br />
                 <div class="card shadow-sm mt-3">
                     <div class="card-body">
                         <img id="randomImage" class="img-responsive" src="" alt="Random Image"><br/>
                         <div id="randomWords" class="mt-3"></div>
                         <p id="expressionTimer" class="mt-3">Time left: 5:00</p>
                         <button class="btn btn-primary mt-3" onclick="refreshExpression()">Refresh Expression</button>
+                        <button class="btn btn-primary mt-3" id="pause" onclick="pause()">Pause</button>
                     </div>
                 </div>
             </div>
@@ -2001,7 +2003,9 @@ const verbs_french = [
         
 
         // expression tab
+        document.getElementById("total_expression").innerText = parseInt(getLocalStorage(`expression_${get_language()}`)) || 0;
         let expressionTimerInterval;
+        let running = false;
 
         function refreshExpression() {
             refreshImage();
@@ -2009,21 +2013,28 @@ const verbs_french = [
             startExpressionTimer();
         }
 
+        function pause() {
+            running = !running;
+            document.getElementById("pause").innerText = running ? "pause" : "play";
+        }
+
         function displayRandomWords() {
             const words = get_words();
             const randomWords = [];
             for (let i = 0; i < 3; i++) {
                 const randomIndex = Math.floor(Math.random() * words.length);
-                randomWords.push(words[randomIndex].tense1);
+                randomWords.push(words[randomIndex].tense1 + "/" + words[randomIndex].tense2);
             }
             document.getElementById('randomWords').innerHTML = randomWords.join(' - ');
         }
 
         function startExpressionTimer() {
+            running = true;
             clearInterval(expressionTimerInterval);
             let timeLeft = 5 * 60; // 5 minutes in seconds
 
             function updateExpressionTimer() {
+                if(!running) return;
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
                 document.getElementById('expressionTimer').textContent = 
@@ -2032,6 +2043,9 @@ const verbs_french = [
                 if (timeLeft === 0) {
                     clearInterval(expressionTimerInterval);
                     alert("Time's up!");
+                    const completions = parseInt(getLocalStorage(`expression_${get_language()}`)) || 0;
+                    setLocalStorage(`expression_${get_language()}`, completions + 1);
+                    document.getElementById("total_expression").innerText = parseInt(getLocalStorage(`expression_${get_language()}`)) || 0;
                 } else {
                     timeLeft--;
                 }
