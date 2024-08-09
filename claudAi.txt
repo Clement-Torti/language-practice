@@ -1,10 +1,12 @@
-Hazme una lista json de tipo:
 
-var lista = [{"tense1":<mot français>, "tense2": <mot arabe> }
+Make a JSON list of the type:
+var list = [
+  {"tense1": <French word>, "tense2": <Arabic word>, "type": <word, verb or sentence>}
+]
+For all words: "tense2": "singular form / plural form / dual form"
+For all verbs give the basic form including past, present, the verb as a noun, and the imperative using the format: "tense2": "<past>/<present>/<noun>/<imperative>/present passive/past passive"
+For sentence, write them as is.
 
-Cuando la palabra arabe es un verbo, dame la forma basica pasada, presente, el verbo como nombre y la forma imperativa usando el formato:
-"tense2": "<pasado>/<presente>/<nombre>/<imperativo>/passif présent/passif passé"
+Always add arabic accent.
 
-Inclue tous les accents en arabe.
-
-Aqui tienes la lista:
+Here is the list:
