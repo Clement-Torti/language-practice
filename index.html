@@ -1809,7 +1809,7 @@ const words_french = [
         createWordLists();
 
      
-        document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`)) || 0;
+        document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`)) + "/" + getGoal(`verbs_${get_language()}`) || 0 + "/" + getGoal(`verbs_${get_language()}`);
         function showRandomVerb() {
             // Generate random pronoun and tense
 
@@ -1912,9 +1912,17 @@ const words_french = [
             document.getElementById("hint").style.display = "inline-block";
         }
         
+        function getGoal(storage) {
+            let goal = 20;
+            while(parseInt(getLocalStorage(storage)) > goal) {
+                goal = goal * 2;
+            }
+
+            return goal;
+        }
 
         // expression tab
-        document.getElementById("total_expression").innerText = parseInt(getLocalStorage(`expression_${get_language()}`)) || 0;
+        document.getElementById("total_expression").innerText = parseInt(getLocalStorage(`expression_${get_language()}`)) + "/" + getGoal(`expression_${get_language()}`)|| 0 + "/" + getGoal(`expression_${get_language()}`);
         let expressionTimerInterval;
         let running = false;
 
