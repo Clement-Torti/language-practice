@@ -3,7 +3,7 @@ Make a JSON list of the type:
 var list = [
   {"tense1": <French word>, "tense2": <Arabic word>, "type": <word, verb or sentence>}
 ]
-For all words: "tense2": "singular form / plural form / dual form / Dual accusative form / Plural accusative form"
+For all words: "tense2": "singular form / plural form / dual form / Plural accusative form / Dual accusative form"
 For all verbs give the basic form including past, present, the verb as a noun, and the imperative using the format: "tense2": "<past>/<present>/<noun>/<imperative>/present passive/past passive"
 For sentence, write them as is.
 

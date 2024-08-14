@@ -141,7 +141,7 @@
     <script>
         // Arabic
         const  pronouns_arabic = ["أنا", "أنتَ", "أنتِ", "هو", "هما", "هي", "نحن", "أنتما", "أنتم", "أنتن", "هم", "هن"];
-        const word_forms_arabic = ["مفرد", "جمع", "مثنى", "مثنى منصوب/مجرور", "جمع منصوب/مجرور"];
+        const word_forms_arabic = ["مفرد", "جمع", "مثنى", "مثنى منصوب/مجرور", "جمع منصوب/مجرور", "جمع"];
 
         const tenses_arabic = [
         { "name": "الماضي", "hint": "Passé" }, 
@@ -675,8 +675,6 @@
   {"tense1": "Incroyable", "tense2": "مُدْهِش / مُدْهِشُون / مُدْهِشَانِ / مُدْهِشِينَ / مُدْهِشَيْنِ", "type": "word"},
   {"tense1": "Spécial", "tense2": "خَاصّ / خَوَاصّ / خَاصَّانِ / خَوَاصَّ / خَاصَّيْنِ", "type": "word"},
   {"tense1": "Endommager", "tense2": "أَضَرَّ/يُضِرُّ/إِضْرَار/أَضِرَّ/يُضَرُّ/أُضِرَّ", "type": "verb"},
-
-
   {"tense1": "Guarde", "tense2": "حَارِس / حُرَّاس / حَارِسَانِ", "type": "word"},
   {"tense1": "S'éffondrer", "tense2": "اِنْهَارَ/يَنْهَارُ/اِنْهِيَار/اِنْهَرْ/يُنْهَارُ/اُنْهِيرَ", "type": "verb"},
   {"tense1": "Expliquer", "tense2": "فَسَّرَ/يُفَسِّرُ/تَفْسِير/فَسِّرْ/يُفَسَّرُ/فُسِّرَ", "type": "verb"},
@@ -1888,7 +1886,7 @@ const words_french = [
             const completions = parseInt(getLocalStorage(`verbs_${get_language()}`)) || 0;
 
             setLocalStorage(`verbs_${get_language()}`, completions + 1);
-            document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`)) || 0;
+            document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`))  + "/" + getGoal(`verbs_${get_language()}`)|| 0;
 
             clearContent();
 
