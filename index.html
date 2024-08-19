@@ -77,7 +77,7 @@
           <input type="radio" name="options" id="option2" autocomplete="off">Français</label>
     </div>
 
-    <div id="hint"> <pre id="hintText"></pre><button class="btn btn-success mt-3" id="close" onclick="closeHint()">close</button></div>
+    <div id="hint"> <pre id="hintText"></pre><button class="btn btn-success mt-3" id="close" onclick="closeConjugation()">close</button></div>
     <div class="container mt-5">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item">
@@ -116,8 +116,10 @@
                         <p class="word tense1" id="randomTense"></p>
                         <p class="word tense1" id="randomNegative"></p>
                         <p class="word tense2" id="tense2Verb"></p>
+                        <br/>
                         <button id="nextBtn" class="btn btn-primary" style="display: none;" onclick="NextVerb()">Next Verb</button>
-                        <button id="hintBtn" class="btn" style="display: none;" onclick="showHint()">Hint</button>
+                        <button id="hintBtn" class="btn" style="display: none;" onclick="showVerbHint()">Hint</button>
+                        <button id="conjBtn" class="btn" style="display: none;" onclick="showConjugation()">Conjugación</button>
                     </div>
                 </div>
                 <button class="btn btn-success mt-3" id="startBtn" onclick="startGame()">Start Game</button>
@@ -1872,6 +1874,7 @@ const words_french = [
      
         document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`)) + "/" + getGoal(`verbs_${get_language()}`) || 0 + "/" + getGoal(`verbs_${get_language()}`);
         function showRandomVerb() {
+            verbShowed = false;
             // Generate random pronoun and tense
 
             // Select a random verb from the verbs array
@@ -1882,8 +1885,10 @@ const words_french = [
             // Update the HTML elements with the random verb
             document.getElementById("randomVerb").textContent = randomPronoun + " " + randomVerb.tense1 ;
             document.getElementById("tense2Verb").textContent = randomVerb.tense2;
+            document.getElementById("tense2Verb").style.display = "none";
             document.getElementById("randomTense").textContent = randomTense.name;
             document.getElementById("hintText").textContent = randomTense.hint;
+
 
             // Determine if to add "(negative)"
             var includeNegative = Math.random() <= 0.2; // 20% chance
@@ -1911,9 +1916,8 @@ const words_french = [
             document.getElementById("startBtn").style.display = "none";
             document.getElementById("resetBtn").style.display = "inline-block";
             document.getElementById("nextBtn").style.display = "inline-block";
+            document.getElementById("conjBtn").style.display = "inline-block";
             document.getElementById("hintBtn").style.display = "inline-block";
-            document.getElementById("hintBtn").textContent = "hint";
-
             
             showRandomVerb();
             timerInterval = setInterval(updateTimer, 1000);
@@ -1929,7 +1933,8 @@ const words_french = [
         }
 
         function NextVerb() {
-            score++;
+            if (!verbShowed) score++;
+
             document.getElementById("score").textContent = score;
             showRandomVerb();
         }
@@ -1939,11 +1944,11 @@ const words_french = [
             document.getElementById("startBtn").style.display = "inline-block";
             document.getElementById("resetBtn").style.display = "none";
             document.getElementById("nextBtn").style.display = "none";
-            document.getElementById("hintBtn").style.display = "none";
+            document.getElementById("conjBtn").style.display = "none";
             const completions = parseInt(getLocalStorage(`verbs_${get_language()}`)) || 0;
 
             setLocalStorage(`verbs_${get_language()}`, completions + 1);
-            document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`))  + "/" + getGoal(`verbs_${get_language()}`)|| 0;
+            document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`))  + "/" + getGoal(`verbs_${get_language()}`) || 0;
 
             clearContent();
 
@@ -1959,17 +1964,25 @@ const words_french = [
             document.getElementById("startBtn").style.display = "inline-block";
             document.getElementById("resetBtn").style.display = "none";
             document.getElementById("nextBtn").style.display = "none";
+            document.getElementById("conjBtn").style.display = "none";
             document.getElementById("hintBtn").style.display = "none";
 
             clearContent();
         }
 
 
-        function closeHint() {
+        function closeConjugation() {
             document.getElementById("hint").style.display = "none";
         }
 
-        function showHint() {
+        var verbShowed = false;
+        function showVerbHint() {
+            document.getElementById("tense2Verb").style.display = "inline-block";
+            verbShowed = true;
+
+        }
+
+        function showConjugation() {
             document.getElementById("hint").style.display = "inline-block";
         }
         
