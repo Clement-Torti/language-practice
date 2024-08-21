@@ -1754,6 +1754,22 @@ const words_french = [
   { "tense1": "Funcionar", "tense2": "fonctionner/fonctionne/a fonctionné/fonctionnera/fonctionnait/fonctionne" }
 ];
 
+
+
+
+document.querySelectorAll('.language label').forEach(function(label) {
+    label.addEventListener('click', function() {
+        var selectedOption = this.querySelector('input[type="radio"]');
+        if (selectedOption.id === 'option1') {
+            // console.log("Arabic selected");
+            // Add your action for Arabic here
+        } else if (selectedOption.id === 'option2') {
+            // console.log("Français selected");
+            // Add your action for French here
+        }
+        createWordLists();
+    });
+});
         //---------------------------------------------------------
         // 
         // 
@@ -1803,6 +1819,7 @@ const words_french = [
 
         function createWordLists() {
             const wordLists = document.getElementById('wordLists');
+            wordLists.innerHTML = '';
 
             const listItem = document.createElement('a');
                 listItem.href = '#';
