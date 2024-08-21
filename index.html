@@ -81,6 +81,9 @@
     <div class="container mt-5">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item">
+                <a class="nav-link" id="number-tab" data-toggle="tab" href="#number" role="tab" aria-controls="number" aria-selected="false">Number</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link active" id="vocabulary-tab" data-toggle="tab" href="#vocabulary" role="tab" aria-controls="vocabulary" aria-selected="true">Vocabulary</a>
             </li>
             <li class="nav-item">
@@ -91,6 +94,23 @@
             </li>
         </ul>
         <div class="tab-content" id="myTabContent">
+            <!-- NUMBER TAB -->
+            <div class="tab-pane fade" id="number" role="tabpanel" aria-labelledby="number-tab">
+                <span class="total" style="color: white;">Total: <span id="number_total"></span></span><br />
+                <span class="timer" style="color: white;">Time: <span id="number_timer">60</span> seconds - </span>
+                <span class="score" style="color: white;">Score: <span id="number_score">0</span></span>
+                
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body">
+                        <p class="word tense1" id="number_operation"></p>
+                        <button id="number_nextBtn" class="btn btn-primary" style="display: none;" onclick="nextNumberOperation()">Next Operation</button>
+                    </div>
+                </div>
+                <button class="btn btn-success mt-3" id="number_startBtn" onclick="startNumberGame()">Start Game</button>
+                <button class="btn btn-danger mt-3" id="number_resetBtn" onclick="resetNumberGame()" style="display: none;">Reset Game</button>
+            </div>
+
+            <!-- VOCABULARY TAB -->
             <div class="tab-pane fade show active" id="vocabulary" role="tabpanel" aria-labelledby="vocabulary-tab">
                 <div class="list-group mt-3" id="wordLists"></div>
                 <div class="card shadow-sm mt-3" id="wordCard" style="display: none;">
@@ -105,6 +125,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- VERB TAB -->
             <div class="tab-pane fade" id="verbs" role="tabpanel" aria-labelledby="verbs-tab">
                 <span class="total" style="color: white;">Total: <span id="total">0</span></span><br />
                 <span class="timer" style="color: white;">Time: <span id="timer">60</span> seconds - </span>
@@ -125,6 +147,8 @@
                 <button class="btn btn-success mt-3" id="startBtn" onclick="startGame()">Start Game</button>
                 <button class="btn btn-danger mt-3" id="resetBtn" onclick="resetGame()" style="display: none;">Reset Game</button>
             </div>
+
+            <!-- EXPRESSION TAB -->
             <div class="tab-pane fade" id="expression" role="tabpanel" aria-labelledby="expression-tab">
                 <span class="total" style="color: white;">Total: <span id="total_expression">0</span></span><br />
                 <div class="card shadow-sm mt-3">
@@ -138,10 +162,19 @@
                     </div>
                 </div>
             </div>
+            
         </div>
     </div>
 
     <script>
+        //---------------------------------------------------------
+        // 
+        // 
+        //  WORDS LIST
+        //
+        //
+        //
+
         // Arabic
         const  pronouns_arabic = ["أنا", "أنتَ", "أنتِ", "هو", "هما", "هي", "نحن", "أنتما", "أنتم", "أنتن", "هم", "هن"];
         const word_forms_arabic = ["مفرد", "جمع", "مثنى", "مثنى منصوب/مجرور", "جمع منصوب/مجرور", "جمع"];
@@ -1721,7 +1754,13 @@ const words_french = [
   { "tense1": "Funcionar", "tense2": "fonctionner/fonctionne/a fonctionné/fonctionnera/fonctionnait/fonctionne" }
 ];
 
-
+        //---------------------------------------------------------
+        // 
+        // 
+        //  VOCABULARY TAB
+        //
+        //
+        //
         function get_language() {
             const selectedOption = document.querySelector('.btn-group-toggle .btn.active input[type="radio"]');
             return selectedOption.nextSibling.textContent.trim();
@@ -1873,6 +1912,14 @@ const words_french = [
         createWordLists();
 
      
+
+        //---------------------------------------------------------
+        // 
+        // 
+        //  VERB TAB
+        //
+        //
+        //
         document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`)) + "/" + getGoal(`verbs_${get_language()}`) || 0 + "/" + getGoal(`verbs_${get_language()}`);
         function showRandomVerb() {
             verbShowed = false;
@@ -1999,7 +2046,13 @@ const words_french = [
             return goal;
         }
 
-        // expression tab
+        //---------------------------------------------------------
+        // 
+        // 
+        //  EXPRESSION TAB
+        //
+        //
+        //
         var expressionScore = 0;
         document.getElementById("total_expression").innerText = parseInt(getLocalStorage(`expression_${get_language()}`)) + "/" + getGoal(`expression_${get_language()}`)|| 0 + "/" + getGoal(`expression_${get_language()}`);
         let expressionTimerInterval;
@@ -2071,6 +2124,86 @@ const words_french = [
         document.addEventListener('DOMContentLoaded', (event) => {
             document.getElementById('expression-tab').addEventListener('click', refreshExpression);
         });
+
+
+
+
+
+        //---------------------------------------------------------
+        // 
+        // 
+        //  NUMBER TAB
+        //
+        //
+        //
+        document.getElementById("number_total").innerText = parseInt(getLocalStorage(`number_${get_language()}`)) + "/" + getGoal(`number_${get_language()}`);
+
+    let numberTimer;
+    let numberTotalSeconds = 60;
+    let numberScore = 0;
+
+    function startNumberGame() {
+        document.getElementById("number_startBtn").style.display = "none";
+        document.getElementById("number_resetBtn").style.display = "inline";
+        displayNumberOperation();
+        numberTimer = setInterval(updateNumberTimer, 1000);
+    }
+
+    function resetNumberGame() {
+        clearInterval(numberTimer);
+        document.getElementById("number_timer").textContent = "60";
+        document.getElementById("number_score").textContent = "0";
+        document.getElementById("number_startBtn").style.display = "inline";
+        document.getElementById("number_resetBtn").style.display = "none";
+        document.getElementById("number_nextBtn").style.display = "none";
+        document.getElementById("number_operation").textContent = "";
+    }
+
+    function updateNumberTimer() {
+        numberTotalSeconds--;
+        document.getElementById("number_timer").textContent = numberTotalSeconds;
+        if (numberTotalSeconds === 0) {
+            var oldTotal = parseInt(getLocalStorage(`number_${get_language()}`)) || 0;
+            var newTotal = oldTotal + 1;
+            setLocalStorage(`number_${get_language()}`, newTotal);
+            document.getElementById("number_total").innerText = newTotal + "/" + getGoal(`number_${get_language()}`);
+
+            clearInterval(numberTimer);
+            alert(`Time's up! Your score is ${numberScore}.`);
+            resetNumberGame();
+        }
+    }
+
+    function displayNumberOperation() {
+        const a = Math.floor(Math.random() * 100) + 1;
+        const b = Math.floor(Math.random() * 100) + 1;
+        const operator = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
+        let result;
+        switch (operator) {
+            case '+':
+                result = a + b;
+                break;
+            case '-':
+                result = a - b;
+                break;
+            case '*':
+                result = a * b;
+                break;
+            case '/':
+                result = a / b;
+                break;
+        }
+        const randomResult = Math.floor(Math.random() * 10000000) + 100;
+        document.getElementById("number_operation").textContent = `${a.toLocaleString()} ${operator} ${b.toLocaleString()} = ${randomResult.toLocaleString()}`;
+        document.getElementById("number_nextBtn").style.display = "inline";
+    }
+
+    function nextNumberOperation() {
+        // document.getElementById("number_nextBtn").style.display = "none";
+        numberScore++;
+        document.getElementById("number_score").textContent = numberScore;
+        displayNumberOperation();
+    }
 
 
     </script>
