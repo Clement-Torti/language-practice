@@ -2013,14 +2013,15 @@ document.querySelectorAll('.language label').forEach(function(label) {
             document.getElementById("nextBtn").style.display = "none";
             document.getElementById("conjBtn").style.display = "none";
             document.getElementById("hintBtn").style.display = "none";
+            document.getElementById("tense2Verb").style.display = "inline-block";
+
             const completions = parseInt(getLocalStorage(`verbs_${get_language()}`)) || 0;
 
             setLocalStorage(`verbs_${get_language()}`, completions + 1);
             document.getElementById("total").innerText = parseInt(getLocalStorage(`verbs_${get_language()}`))  + "/" + getGoal(`verbs_${get_language()}`) || 0;
 
-            clearContent();
-
             alert("Game Over! Your score: " + score);
+            clearContent();
         }
 
         function resetGame() {
