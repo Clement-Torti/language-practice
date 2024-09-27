@@ -7,6 +7,6 @@ For all words: "tense2": "singular form / plural form / dual form / Plural accus
 For all verbs give the basic form including past, present, the verb as a noun, and the imperative using the format: "tense2": "<past>/<present>/<noun>/<imperative>/present passive/past passive"
 For sentence, write them as is.
 
-Always add arabic accent.
+Always add all arabic accents.
 
 Here is the list:
