@@ -8,6 +8,6 @@ For all verbs give the basic form including past, present, the verb as a noun, a
 For sentence, write them as is.
 
 Always add all arabic accents.
-1 word per line.
+1 complete object per line.
 
 Here is the list:
