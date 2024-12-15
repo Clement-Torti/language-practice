@@ -1,3 +1,8 @@
+Donne moi la liste <mot fr>: <mot arabe>,
+si c'est un verbe donne <infinitif fr>:  <vrb passé "il" arabe>/<vrb présent "il" arabe>
+
+------------
+
 
 Make a JSON list of the type:
 var list = [
