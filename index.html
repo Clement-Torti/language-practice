@@ -2648,7 +2648,7 @@ document.querySelectorAll('.language label').forEach(function(label) {
             listItemLast50.className = 'list-group-item list-group-item-action';
             listItemLast50.innerText = `Last 50`;
             const completionsLast50 = getLocalStorage(`list999_${get_language()}`) || 0;
-            listItemLast50.innerText += ` (Completedo ${completions} veces)`;
+            listItemLast50.innerText += ` (Completedo ${completionsLast50} veces)`;
             listItemLast50.onclick = () => startList(-1, -1, 999);
             wordLists.appendChild(listItemLast50);
         }
