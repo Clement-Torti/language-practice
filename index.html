@@ -2659,14 +2659,14 @@ document.querySelectorAll('.language label').forEach(function(label) {
                 wordLists.appendChild(listItem);
             }
 
-            const listItemLast50 = document.createElement('a');
-            listItemLast50.href = '#';
-            listItemLast50.className = 'list-group-item list-group-item-action';
-            listItemLast50.innerText = `Last 50`;
-            const completionsLast50 = getLocalStorage(`list999_${get_language()}`) || 0;
-            listItemLast50.innerText += ` (Completedo ${completionsLast50} veces)`;
-            listItemLast50.onclick = () => startList(-1, -1, 999);
-            wordLists.appendChild(listItemLast50);
+            const listItemLast30 = document.createElement('a');
+            listItemLast30.href = '#';
+            listItemLast30.className = 'list-group-item list-group-item-action';
+            listItemLast30.innerText = `Last 30`;
+            const completionsLast30 = getLocalStorage(`list999_${get_language()}`) || 0;
+            listItemLast30.innerText += ` (Completedo ${completionsLast30} veces)`;
+            listItemLast30.onclick = () => startList(-1, -1, 999);
+            wordLists.appendChild(listItemLast30);
         }
 
 
@@ -2686,7 +2686,7 @@ document.querySelectorAll('.language label').forEach(function(label) {
                 }
             } else if (listNumber == 999) {
                 const words = get_words();
-                currentList = words.slice(words.length - 50, words.length);
+                currentList = words.slice(words.length - 30, words.length);
                 shuffle(currentList);
             } else {
                 currentList = get_words().slice(start, end);
