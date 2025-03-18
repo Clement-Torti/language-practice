@@ -1,6 +1,7 @@
 Donne moi la liste <mot fr>: <mot arabe>,
 si c'est un verbe donne <infinitif fr>:  <vrb passé "il" arabe>/<vrb présent "il" arabe>
-les mot doivent etre au singulier
+les mot doivent etre au singulier.
+Libre à toi de corriger des erreurs de traduction.
 
 ------------
 
