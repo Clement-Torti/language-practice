@@ -13,7 +13,7 @@ var list = [
 For all words: "tense2": "singular form / plural form / dual form / Plural accusative form / Dual accusative form" 
 ex =>   {"tense1": "indicateur", "tense2": "مُؤَشِّر / مُؤَشِّرات / مُؤَشِّران / مُؤَشِّراتٍ / مُؤَشِّرَيْن", "type": "word"},
 For all verbs give the basic form including past, present, the verb as a noun, and the imperative using the format: "tense2": "<past>/<present>/<noun>/<imperative>/present passive/past passive"
-ex =>   {"tense1": "persécuter", "tense2": "اِضْطَهَدَ / يَضْطَهِد / اِضْطِهاد / اِضْطَهِدْ / مُضْطَهَد / مُضْطَهَد", "type": "verb"} 
+ex =>    {"tense1": "Surpasser", "tense2": "فاقَ/يَفوقُ/فَوْق/فُقْ/يُفاقُ/فيقَ", "type": "verb"},
 For sentence, write them as is.
 
 Don't imit any form and always add all arabic accents.
