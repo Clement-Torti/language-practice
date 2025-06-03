@@ -2439,25 +2439,7 @@
                 listItem.innerText += ` (Completed ${completions} times)`;
                 listItem.onclick = () => startList(i, i + LIST_LENGTH, listNumber);
                 
-                // Add star icon
-                const star = document.createElement('i');
-                star.className = 'fas fa-star favorite-star';
-                star.style.color = '#ccc';
-                star.onclick = (e) => {
-                    e.stopPropagation();
-                    toggleFavorite(listNumber);
-                    star.classList.toggle('active');
-                    star.style.color = star.classList.contains('active') ? 'gold' : '#ccc';
-                };
-                
-                // Check if this list is favorited
-                const isFavorited = localStorage.getItem(`favorite_list_${currentLanguage}_${listNumber}`) === 'true';
-                if (isFavorited) {
-                    star.classList.add('active');
-                    star.style.color = 'gold';
-                }
-                
-                listItem.appendChild(star);
+              
                 wordLists.appendChild(listItem);
             }
 
