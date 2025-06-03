@@ -2512,11 +2512,30 @@
             currentList = [];
             
             if (listNumber == 0) {
-                // Random selection
-                for (let i = 0; i < LIST_LENGTH; i++) {
+                // Random selection - include up to 5 favorite words
+                const favoriteWords = [];
+                
+                // Get all favorited words
+                for (let i = 0; i < words.length; i++) {
+                    const isFavorited = localStorage.getItem(`favorite_word_${currentLanguage}_${i}`) === 'true';
+                    if (isFavorited) {
+                        favoriteWords.push(words[i]);
+                    }
+                }
+                
+                // Determine how many favorites to include (up to 5, or less if not enough exist)
+                const favoritesToInclude = Math.min(5, favoriteWords.length);
+                const shuffledFavorites = shuffleArray(favoriteWords).slice(0, favoritesToInclude);
+                
+                // Fill the rest with random words
+                const remainingCount = LIST_LENGTH - shuffledFavorites.length;
+                for (let i = 0; i < remainingCount; i++) {
                     const randomIndex = Math.floor(Math.random() * words.length);
                     currentList.push(words[randomIndex]);
                 }
+                
+                // Combine favorites with random words and shuffle again
+                currentList = shuffleArray([...shuffledFavorites, ...currentList]);
             } else if (listNumber == 999) {
                 // Last 30 words
                 currentList = words.slice(words.length - 35, words.length);
