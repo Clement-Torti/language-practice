@@ -2422,9 +2422,9 @@
             const randomListItem = document.createElement('a');
             randomListItem.href = '#';
             randomListItem.className = 'list-group-item list-group-item-action';
-            randomListItem.innerText = `Random`;
+            randomListItem.innerHTML = `<i class="fas fa-random me-2"></i>Random`;
             const randomCompletions = getLocalStorageValue(`list0_${currentLanguage}`) || 0;
-            randomListItem.innerText += ` (Completed ${randomCompletions} times)`;
+            randomListItem.innerHTML += ` (Completed ${randomCompletions} times)`;
             randomListItem.onclick = () => startList(-1, -1, 0);
             wordLists.appendChild(randomListItem);
 
@@ -2434,13 +2434,13 @@
             const last30ListItem = document.createElement('a');
             last30ListItem.href = '#';
             last30ListItem.className = 'list-group-item list-group-item-action';
-            last30ListItem.innerText = `Last 30`;
+            last30ListItem.innerHTML = `<i class="fas fa-history me-2"></i>Last 30`;
             const last30Completions = getLocalStorageValue(`list999_${currentLanguage}`) || 0;
-            last30ListItem.innerText += ` (Completed ${last30Completions} times)`;
+            last30ListItem.innerHTML += ` (Completed ${last30Completions} times)`;
             last30ListItem.onclick = () => startList(-1, -1, 999);
             wordLists.appendChild(last30ListItem);
 
-            
+
 
             // Sequential lists
             for (let i = 0; i < words.length; i += LIST_LENGTH) {
