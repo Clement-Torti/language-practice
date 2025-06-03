@@ -2307,7 +2307,7 @@
         // GLOBAL VARIABLES AND UTILITIES
         // ============================================================================
         
-        let currentLanguage = 'arabic';
+        let currentLanguage = 'Arabic';
         let currentList = [];
         let currentWordIndex = 0;
         let remainingWords = 0;
@@ -2329,7 +2329,7 @@
 
         // Utility functions
         function getCurrentLanguageData() {
-            return currentLanguage === 'arabic' ? ARABIC_DATA : FRENCH_DATA;
+            return currentLanguage === 'Arabic' ? ARABIC_DATA : FRENCH_DATA;
         }
 
         function getStorageKey(type) {
@@ -2548,7 +2548,7 @@
                 if (isTense1) {
                     displayWord = word.tense1;
                     translation = word.tense2;
-                    if (word.type === "word" && currentLanguage === 'arabic') {
+                    if (word.type === "word" && currentLanguage === 'Arabic') {
                         const randomIndex = Math.floor(Math.random() * getCurrentLanguageData().wordForms.length);
                         displayForm = getCurrentLanguageData().wordForms[randomIndex];
                     }
