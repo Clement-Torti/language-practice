@@ -2414,7 +2414,7 @@
             favoritesListItem.className = 'list-group-item list-group-item-action';
             favoritesListItem.innerHTML = `<i class="fas fa-star me-2" style="color: gold;"></i>Favorites`;
             const favoritesCompletions = getLocalStorageValue(`favorites_${currentLanguage}`) || 0;
-            favoritesListItem.innerHTML += ` <span class="text-muted">(Completed ${favoritesCompletions} times)</span>`;
+            favoritesListItem.innerHTML += ` (Completed ${favoritesCompletions} times)`;
             favoritesListItem.onclick = () => startFavoritesList();
             wordLists.appendChild(favoritesListItem);
 
