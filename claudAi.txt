@@ -16,7 +16,7 @@ For all verbs give the basic form including past, present, the verb as a noun, a
 ex =>    {"tense1": "Surpasser", "tense2": "فاقَ/يَفوقُ/فَوْق/فُقْ/يُفاقُ/فيقَ", "type": "verb"},
 For sentence, write them as is.
 
-Don't imit any form and always add all arabic accents.
+Don't omit any form and always add all arabic accents.
 1 complete object per line.
 
 Here is the list:
