@@ -1,0 +1,426 @@
+Change les 8 articles pour d'autre récent sur n'importe quel thème: sience, politique, espace, animeaux, tech, art ...
+et ouvre cette page en preview.
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أخبار اليوم - الأخبار التقنية والعلمية</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 50%, #2d1b69 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #64b5f6, #42a5f5, #1e88e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .news-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .news-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #64b5f6, #42a5f5, #1e88e5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .news-card:hover::before {
+            opacity: 1;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(100, 181, 246, 0.3);
+        }
+
+        .category {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(45deg, #64b5f6, #42a5f5);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #000;
+        }
+
+        .news-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #64b5f6, #42a5f5, #1e88e5);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+
+        .news-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            color: #64b5f6;
+        }
+
+        .news-summary {
+            font-size: 1.45rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .translation-btn {
+            background: linear-gradient(45deg, #64b5f6, #42a5f5);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .translation-btn:hover {
+            background: linear-gradient(45deg, #42a5f5, #1e88e5);
+            transform: scale(1.05);
+        }
+
+        .french-translation {
+            display: none;
+            background: rgba(100, 181, 246, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #64b5f6;
+            margin-top: 10px;
+        }
+
+        .french-translation.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .french-title {
+            font-weight: bold;
+            color: #64b5f6;
+            margin-bottom: 8px;
+        }
+
+        .date {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 15px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Word hover translation styles */
+        .translatable-word {
+            position: relative;
+            display: inline;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .translatable-word:hover {
+            background: rgba(100, 181, 246, 0.2);
+            color: #64b5f6;
+        }
+
+        .word-translation {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border: 1px solid #64b5f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-bottom: 5px;
+        }
+
+        .word-translation::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #64b5f6;
+        }
+
+        .translatable-word:hover .word-translation {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .word-translation {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>أخبار اليوم المختارة</h1>
+            <p>آخر الأخبار في التكنولوجيا والعلوم والجيوسياسة والحيوانات</p>
+        </div>
+
+        <div class="news-grid">
+            <div class="news-card">
+                <div class="category">تكنولوجيا</div>
+                <div class="news-image">🤖</div>
+                <div class="news-title">
+                    <span class="translatable-word">أوبن إيه آي<span class="word-translation">OpenAI</span></span> 
+                    <span class="translatable-word">تواصل<span class="word-translation">continue</span></span> 
+                    <span class="translatable-word">الشراكة<span class="word-translation">le partenariat</span></span> 
+                    <span class="translatable-word">مع<span class="word-translation">avec</span></span> 
+                    <span class="translatable-word">شركة<span class="word-translation">entreprise</span></span> 
+                    <span class="translatable-word">سكيل<span class="word-translation">Scale</span></span> 
+                    <span class="translatable-word">بعد<span class="word-translation">après</span></span> 
+                    <span class="translatable-word">استثمار<span class="word-translation">investissement</span></span> 
+                    <span class="translatable-word">ميتا<span class="word-translation">Meta</span></span>
+                </div>
+                <div class="news-summary">
+                    <span class="translatable-word">أعلنت<span class="word-translation">a annoncé</span></span> 
+                    <span class="translatable-word">المديرة<span class="word-translation">la directrice</span></span> 
+                    <span class="translatable-word">المالية<span class="word-translation">financière</span></span> 
+                    <span class="translatable-word">لشركة<span class="word-translation">de l'entreprise</span></span> 
+                    <span class="translatable-word">أوبن إيه آي<span class="word-translation">OpenAI</span></span> 
+                    أن <span class="translatable-word">الشركة<span class="word-translation">l'entreprise</span></span> 
+                    <span class="translatable-word">ستواصل<span class="word-translation">continuera</span></span> 
+                    <span class="translatable-word">العمل<span class="word-translation">le travail</span></span> 
+                    <span class="translatable-word">مع<span class="word-translation">avec</span></span> 
+                    <span class="translatable-word">سكيل إيه آي<span class="word-translation">Scale AI</span></span> 
+                    <span class="translatable-word">بعد<span class="word-translation">après</span></span> 
+                    أن <span class="translatable-word">وافقت<span class="word-translation">a accepté</span></span> 
+                    <span class="translatable-word">شركة<span class="word-translation">entreprise</span></span> 
+                    <span class="translatable-word">ميتا<span class="word-translation">Meta</span></span> 
+                    على <span class="translatable-word">أخذ<span class="word-translation">prendre</span></span> 
+                    <span class="translatable-word">حصة<span class="word-translation">participation</span></span> 
+                    49% في <span class="translatable-word">الشركة<span class="word-translation">l'entreprise</span></span> 
+                    <span class="translatable-word">الناشئة<span class="word-translation">startup</span></span> 
+                    <span class="translatable-word">للذكاء<span class="word-translation">d'intelligence</span></span> 
+                    <span class="translatable-word">الاصطناعي<span class="word-translation">artificielle</span></span> 
+                    <span class="translatable-word">مقابل<span class="word-translation">pour</span></span> 
+                    14.8 <span class="translatable-word">مليار<span class="word-translation">milliards</span></span> 
+                    <span class="translatable-word">دولار<span class="word-translation">dollars</span></span>.
+                </div>
+                <button class="translation-btn" onclick="toggleTranslation(this)">عرض الترجمة الفرنسية</button>
+                <div class="french-translation">
+                    <div class="french-title">OpenAI continue son partenariat avec Scale AI après l'investissement de Meta</div>
+                    <div>La directrice financière d'OpenAI a annoncé que l'entreprise continuera à travailler avec Scale AI après que Meta ait accepté de prendre une participation de 49% dans la startup d'intelligence artificielle pour 14,8 milliards de dollars.</div>
+                </div>
+                <div class="date">13 يونيو 2025</div>
+            </div>
+
+            <div class="news-card">
+                <div class="category">تكنولوجيا</div>
+                <div class="news-image">🔗</div>
+                <div class="news-title">
+                    <span class="translatable-word">تطورات<span class="word-translation">évolutions</span></span> 
+                    <span class="translatable-word">تقنية<span class="word-translation">technologie</span></span> 
+                    <span class="translatable-word">البلوك<span class="word-translation">bloc</span></span> 
+                    <span class="translatable-word">تشين<span class="word-translation">chaîne</span></span> 
+                    <span class="translatable-word">المتوقعة<span class="word-translation">attendues</span></span> 
+                    في 2025
+                </div>
+                <div class="news-summary">
+                    من <span class="translatable-word">المتوقع<span class="word-translation">attendu</span></span> 
+                    أن <span class="translatable-word">تؤثر<span class="word-translation">affecte</span></span> 
+                    <span class="translatable-word">تقنية<span class="word-translation">technologie</span></span> 
+                    <span class="translatable-word">البلوك<span class="word-translation">bloc</span></span> 
+                    <span class="translatable-word">تشين<span class="word-translation">chaîne</span></span>، 
+                    <span class="translatable-word">التي<span class="word-translation">qui</span></span> 
+                    <span class="translatable-word">تسمح<span class="word-translation">permet</span></span> 
+                    <span class="translatable-word">بتخزين<span class="word-translation">de stocker</span></span> 
+                    <span class="translatable-word">السجلات<span class="word-translation">enregistrements</span></span> 
+                    <span class="translatable-word">عبر<span class="word-translation">via</span></span> 
+                    <span class="translatable-word">شبكة<span class="word-translation">réseau</span></span> 
+                    من <span class="translatable-word">أجهزة<span class="word-translation">ordinateurs</span></span> 
+                    <span class="translatable-word">الكمبيوتر<span class="word-translation">ordinateurs</span></span>، 
+                    على <span class="translatable-word">سلاسل<span class="word-translation">chaînes</span></span> 
+                    <span class="translatable-word">التوريد<span class="word-translation">d'approvisionnement</span></span> 
+                    <span class="translatable-word">وقطاعات<span class="word-translation">et secteurs</span></span> 
+                    <span class="translatable-word">مختلفة<span class="word-translation">différents</span></span> 
+                    من <span class="translatable-word">الرعاية<span class="word-translation">soins</span></span> 
+                    <span class="translatable-word">الصحية<span class="word-translation">de santé</span></span> 
+                    إلى <span class="translatable-word">التمويل<span class="word-translation">financement</span></span> 
+                    في <span class="translatable-word">عام<span class="word-translation">année</span></span> 
+                    2025.
+                </div>
+                <button class="translation-btn" onclick="toggleTranslation(this)">عرض الترجمة الفرنسية</button>
+                <div class="french-translation">
+                    <div class="french-title">Évolutions attendues de la technologie blockchain en 2025</div>
+                    <div>La technologie blockchain, qui permet de stocker des enregistrements sur un réseau d'ordinateurs, devrait affecter les chaînes d'approvisionnement et différents secteurs de la santé à la finance en 2025.</div>
+                </div>
+                <div class="date">مايو 2025</div>
+            </div>
+
+            <div class="news-card">
+                <div class="category">أمن سيبراني</div>
+                <div class="news-image">🚨</div>
+                <div class="news-title">
+                    <span class="translatable-word">تحذير<span class="word-translation">alerte</span></span> 
+                    من <span class="translatable-word">ارتفاع<span class="word-translation">montée</span></span> 
+                    <span class="translatable-word">الاحتيال<span class="word-translation">fraude</span></span> 
+                    <span class="translatable-word">بالذكاء<span class="word-translation">par intelligence</span></span> 
+                    <span class="translatable-word">الاصطناعي<span class="word-translation">artificielle</span></span>
+                </div>
+                <div class="news-summary">
+                    <span class="translatable-word">يحذر<span class="word-translation">met en garde</span></span> 
+                    <span class="translatable-word">تقرير<span class="word-translation">rapport</span></span> 
+                    <span class="translatable-word">جديد<span class="word-translation">nouveau</span></span> 
+                    من <span class="translatable-word">ارتفاع<span class="word-translation">hausse</span></span> 
+                    <span class="translatable-word">مقلق<span class="word-translation">alarmante</span></span> 
+                    في <span class="translatable-word">الاحتيال<span class="word-translation">fraude</span></span> 
+                    <span class="translatable-word">العالمي<span class="word-translation">mondiale</span></span>، 
+                    <span class="translatable-word">حيث<span class="word-translation">où</span></span> 
+                    <span class="translatable-word">فُقد<span class="word-translation">ont été perdus</span></span> 
+                    12.4 <span class="translatable-word">مليار<span class="word-translation">milliards</span></span> 
+                    <span class="translatable-word">دولار<span class="word-translation">dollars</span></span> 
+                    <span class="translatable-word">بسبب<span class="word-translation">à cause de</span></span> 
+                    <span class="translatable-word">عمليات<span class="word-translation">opérations</span></span> 
+                    <span class="translatable-word">احتيال<span class="word-translation">escroqueries</span></span> 
+                    <span class="translatable-word">مدفوعة<span class="word-translation">pilotées</span></span> 
+                    <span class="translatable-word">بالذكاء<span class="word-translation">par l'IA</span></span> 
+                    <span class="translatable-word">الاصطناعي<span class="word-translation">artificielle</span></span> 
+                    <span class="translatable-word">تشمل<span class="word-translation">incluant</span></span> 
+                    <span class="translatable-word">التزييف<span class="word-translation">deepfakes</span></span> 
+                    <span class="translatable-word">العميق<span class="word-translation">profonds</span></span> 
+                    <span class="translatable-word">ومنصات<span class="word-translation">et plateformes</span></span> 
+                    <span class="translatable-word">العملات<span class="word-translation">monnaies</span></span> 
+                    <span class="translatable-word">المشفرة<span class="word-translation">crypto</span></span> 
+                    <span class="translatable-word">المزيفة<span class="word-translation">fausses</span></span> 
+                    <span class="translatable-word">واستنساخ<span class="word-translation">et clonage</span></span> 
+                    <span class="translatable-word">الأصوات<span class="word-translation">vocal</span></span>.
+                </div>
+                <button class="translation-btn" onclick="toggleTranslation(this)">عرض الترجمة الفرنسية</button>
+                <div class="french-translation">
+                    <div class="french-title">Alerte sur la montée de la fraude par intelligence artificielle</div>
+                    <div>Un nouveau rapport met en garde contre une hausse alarmante de la fraude mondiale, avec 12,4 milliards de dollars perdus à cause d'escroqueries pilotées par l'IA incluant les deepfakes, les fausses plateformes crypto et le clonage vocal.</div>
+                </div>
+                <div class="date">31 مايو 2025</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleTranslation(button) {
+            const translation = button.nextElementSibling;
+            
+            if (translation.classList.contains('show')) {
+                translation.classList.remove('show');
+                button.textContent = 'عرض الترجمة الفرنسية';
+            } else {
+                translation.classList.add('show');
+                button.textContent = 'إخفاء الترجمة الفرنسية';
+            }
+        }
+
+        // Add subtle animations on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        document.querySelectorAll('.news-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
