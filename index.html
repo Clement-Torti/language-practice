@@ -202,6 +202,12 @@
             height: 200px;
             border-radius: 6px;
         }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -303,8 +309,18 @@
                         <div class="text-center">
                             <i class="fas fa-star favorite-star" id="wordFavoriteStar" 
                                 onclick="toggleWordFavorite()" style="color: #ccc;"></i>
+                            
+                            <!-- Main Display (Text or Icon) -->
                             <div class="word-display" id="currentWord"></div>
+                            
+                            <!-- Replay Button (Only for Audio Mode) -->
+                            <button id="replayAudioBtn" class="btn btn-outline-light btn-sm mb-3" style="display: none;" onclick="replayCurrentAudio()">
+                                <i class="fas fa-volume-up me-2"></i>Replay Audio
+                            </button>
+
                             <div class="word-form" id="wordForm"></div>
+                            
+                            <!-- Translation (Hidden Answer) -->
                             <div class="translation translation-voc" id="translation" style="display: none;"></div>
                             
                             <div class="progress-custom" style="display: none;">
@@ -2701,6 +2717,36 @@
 
 
         // ============================================================================
+        // AUDIO UTILITIES
+        // ============================================================================
+        let currentAudioText = "";
+
+        function speakText(text) {
+            if (!text) return;
+
+            // Cancel any currently playing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            // 'ar-SA' is the standard locale for Modern Standard Arabic
+            utterance.lang = 'ar-SA'; 
+            utterance.rate = 0.9; // Slightly slower speed for better clarity
+            utterance.pitch = 1;
+
+            // Error handling for missing voices
+            utterance.onerror = function(event) {
+                console.error('Speech synthesis error', event);
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function replayCurrentAudio() {
+            speakText(currentAudioText);
+        }
+
+
+        // ============================================================================
         // LANGUAGE SELECTOR EVENT HANDLERS
         // ============================================================================
         
@@ -2883,28 +2929,67 @@
         function showNextWord() {
             if (currentWordIndex < currentList.length) {
                 const word = currentList[currentWordIndex];
-                const isTense1 = Math.random() < 0.5;
                 
+                // Reset UI elements
+                document.getElementById('translation').style.display = 'none';
+                document.getElementById('replayAudioBtn').style.display = 'none';
+                currentAudioText = ""; // Reset audio text
+
+                // Parse Arabic parts (tense2) by splitting "/" and trimming whitespace
+                const arabicParts = word.tense2.split('/').map(part => part.trim());
+                // Select one random part for display or audio
+                const randomArabicPart = arabicParts[Math.floor(Math.random() * arabicParts.length)];
+
                 let displayWord, displayForm = '', translation;
+                const rand = Math.random();
+
+                // LOGIC: 40% French, 30% Arabic, 30% Audio
+                // Note: In your JSON, tense1 is French/Meaning, tense2 is Arabic
                 
-                if (isTense1) {
+                if (rand < 0.40) {
+                    // --- 40% FRENCH (Show Meaning, Guess Arabic) ---
                     displayWord = word.tense1;
                     translation = word.tense2;
+                    
+                    // Optional: Show form hint if Arabic mode is active
                     if (word.type === "word" && currentLanguage === 'Arabic') {
-                        const randomIndex = Math.floor(Math.random() * getCurrentLanguageData().wordForms.length);
-                        displayForm = getCurrentLanguageData().wordForms[randomIndex];
+                        const formIndex = Math.floor(Math.random() * getCurrentLanguageData().wordForms.length);
+                        displayForm = getCurrentLanguageData().wordForms[formIndex];
                     }
+
+                } else if (rand < 0.70) {
+                    // --- 30% ARABIC (Show Arabic Text, Guess French) ---
+                    // We show one specific part (like existing logic) or the full list?
+                    // Let's stick to the "Random Part" logic you used before for cleaner cards
+                    displayWord = randomArabicPart;
+                    
+                    // The translation reveals the Full Arabic + French
+                    translation = (arabicParts.length > 1 ? word.tense2 + "\n\n" : "") + word.tense1;
+
                 } else {
-                    const subWords = word.tense2.split("/");
-                    displayWord = subWords[Math.floor(Math.random() * subWords.length)];
-                    translation = subWords.length > 1 ? word.tense2 + "\n" + word.tense1 : word.tense1;
+                    // --- 30% AUDIO ONLY (Hear Arabic, Guess French/Text) ---
+                    
+                    // 1. Set the text to speak (One specific part)
+                    currentAudioText = randomArabicPart;
+                    
+                    // 2. Play the audio
+                    speakText(currentAudioText);
+                    
+                    // 3. UI Updates
+                    displayWord = '<i class="fas fa-headphones-alt" style="font-size: 4rem; color: var(--primary-color); animation: pulse 2s infinite;"></i><div style="font-size: 1rem; margin-top: 10px; color: var(--text-muted)">Listen...</div>';
+                    
+                    // 4. Reveal button logic
+                    document.getElementById('replayAudioBtn').style.display = 'inline-block';
+
+                    // 5. Translation shows The Arabic Word + French Meaning
+                    translation = `${word.tense2}\n\n${word.tense1}`;
                 }
 
-                document.getElementById('currentWord').innerText = displayWord;
+                // Apply to DOM
+                document.getElementById('currentWord').innerHTML = displayWord;
                 document.getElementById('wordForm').innerText = displayForm;
                 document.getElementById('translation').innerText = translation;
-                document.getElementById('translation').style.display = 'none';
-                
+
                 // Update favorite star status
                 const words = getCurrentLanguageData().words;
                 const wordIndex = words.findIndex(w => w.tense1 === word.tense1 && w.tense2 === word.tense2);
@@ -2912,11 +2997,11 @@
                 const star = document.getElementById('wordFavoriteStar');
                 star.classList.toggle('active', isFavorited);
                 star.style.color = isFavorited ? 'gold' : '#ccc';
+
             } else {
                 finishList();
             }
         }
-
         function verifyWord() {
             document.getElementById('translation').style.display = 'block';
         }
