@@ -208,6 +208,59 @@
             50% { transform: scale(1.1); opacity: 0.8; }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        /* Speaking section styles */
+        .sentence-card {
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #answerButtons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        #speakingControls .form-control {
+            background: var(--darker-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        #speakingControls .form-control:focus {
+            background: var(--card-bg);
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        #speakingControls .form-label {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        #speakingControls a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        #speakingControls a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -257,6 +310,11 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="expression-tab" data-bs-toggle="tab" data-bs-target="#expression" type="button">
                     <i class="fas fa-comments me-2"></i>Expression
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="speaking-tab" data-bs-toggle="tab" data-bs-target="#speaking" type="button">
+                    <i class="fas fa-microphone me-2"></i>Speaking
                 </button>
             </li>
         </ul>
@@ -417,6 +475,89 @@
                             <button class="btn btn-outline-light" id="pauseBtn" onclick="pauseExpression()">
                                 <i class="fas fa-pause me-2"></i>Pause
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speaking Tab -->
+            <div class="tab-pane fade" id="speaking">
+                <div class="glass-card main-card fade-in-up">
+                    <div class="stats-bar">
+                        <div class="stat-item">
+                            <div class="stat-value" id="speakingCorrect">0</div>
+                            <div class="stat-label">Correct</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="speakingWrong">0</div>
+                            <div class="stat-label">Wrong</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="speakingProgress">0/10</div>
+                            <div class="stat-label">Progress</div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <div id="speakingControls" class="mb-4">
+                            <div class="mb-3">
+                                <label for="sentenceCount" class="form-label">Number of sentences:</label>
+                                <input type="number" id="sentenceCount" class="form-control d-inline-block" style="width: 100px;" value="10" min="1" max="20">
+                            </div>
+                            <button class="btn btn-gradient" onclick="startSpeakingPractice()">
+                                <i class="fas fa-play me-2"></i>Start Practice
+                            </button>
+                        </div>
+
+                        <div id="speakingContent" style="display: none;">
+                            <div id="loadingIndicator" class="mb-4" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Generating sentences with AI...</p>
+                            </div>
+
+                            <div id="sentenceDisplay" style="display: none;">
+                                <div class="sentence-card glass-card p-4 mb-4">
+                                    <div class="word-display" id="currentSentence"></div>
+                                    <div id="translationDisplay" class="translation mt-3" style="display: none;"></div>
+                                </div>
+
+                                <div class="button-group">
+                                    <button class="btn btn-gradient mb-2" id="revealBtn" onclick="revealTranslation()">
+                                        <i class="fas fa-eye me-2"></i>Reveal Translation
+                                    </button>
+                                    <div id="answerButtons" style="display: none;">
+                                        <button class="btn btn-success-gradient me-2" onclick="markAnswer(true)">
+                                            <i class="fas fa-check me-2"></i>I Got It Right
+                                        </button>
+                                        <button class="btn btn-danger-gradient" onclick="markAnswer(false)">
+                                            <i class="fas fa-times me-2"></i>I Got It Wrong
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="completionScreen" style="display: none;">
+                                <h3 class="mb-4">Practice Complete!</h3>
+                                <div class="stats-bar mb-4">
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="finalCorrect">0</div>
+                                        <div class="stat-label">Correct</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="finalWrong">0</div>
+                                        <div class="stat-label">Wrong</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="finalScore">0%</div>
+                                        <div class="stat-label">Score</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-gradient" onclick="resetSpeakingPractice()">
+                                    <i class="fas fa-redo me-2"></i>Practice Again
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3431,7 +3572,231 @@
                 localStorage.setItem(`favorite_word_${currentLanguage}_${wordIndex}`, isFavorited);
             }
         }
-    
+
+    // ============================================================================
+    // SPEAKING PRACTICE
+    // ============================================================================
+
+    const GEMINI_API_KEY = 'AIzaSyBFJ2_rrI1tnwoLBGwBXfh2vmP4Ty0Plx8';
+
+    let speakingSentences = [];
+    let currentSentenceIndex = 0;
+    let speakingStats = { correct: 0, wrong: 0 };
+
+    async function startSpeakingPractice() {
+        const sentenceCount = parseInt(document.getElementById('sentenceCount').value);
+
+        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
+            alert('Please configure your Gemini API key in the config file');
+            return;
+        }
+
+        // Validate sentence count
+        if (sentenceCount < 1 || sentenceCount > 20) {
+            alert('Please enter a number between 1 and 20');
+            return;
+        }
+
+        // Show loading indicator
+        document.getElementById('speakingControls').style.display = 'none';
+        document.getElementById('speakingContent').style.display = 'block';
+        document.getElementById('loadingIndicator').style.display = 'block';
+
+        try {
+            // Generate sentences using Gemini API
+            await generateSentences(GEMINI_API_KEY, sentenceCount);
+
+            // Hide loading, show first sentence
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('sentenceDisplay').style.display = 'block';
+
+            // Reset stats
+            speakingStats = { correct: 0, wrong: 0 };
+            currentSentenceIndex = 0;
+            updateSpeakingStats();
+
+            // Display first sentence
+            displayCurrentSentence();
+        } catch (error) {
+            console.error('Error generating sentences:', error);
+            alert('Error generating sentences: ' + error.message);
+            resetSpeakingPractice();
+        }
+    }
+
+    async function generateSentences(apiKey, count) {
+        const words = getCurrentLanguageData().words;
+
+        // Select random words
+        const shuffled = [...words].sort(() => Math.random() - 0.5);
+        const selectedWords = shuffled.slice(0, count);
+
+        // Prepare words for the prompt
+        const wordList = selectedWords.map(word => {
+            // For words with multiple forms, pick one randomly
+            const forms = word.tense2.split(' / ');
+            const randomForm = forms[Math.floor(Math.random() * forms.length)];
+            return {
+                french: word.tense1,
+                arabic: randomForm,
+                type: word.type
+            };
+        });
+
+        // Create the prompt
+        const prompt = `You are a language learning assistant. Generate ${count} sentences using the following words. Each sentence should use ONE word from the list below.
+
+Words to use:
+${wordList.map((w, i) => `${i + 1}. ${w.french} = ${w.arabic} (${w.type})`).join('\n')}
+
+IMPORTANT INSTRUCTIONS:
+1. Generate exactly ${count} sentences, one for each word
+2. Each sentence should be in French with its Arabic translation
+3. For verbs, feel free to conjugate them in any tense (past, present, future, imperative, etc.)
+4. For nouns, you can use them in singular, plural, or dual form
+5. Make sentences of reasonable length (5-15 words)
+6. Make the sentences practical and useful for language learning
+7. Ensure the Arabic translation uses the exact word form provided (or a conjugated/declined form of it)
+
+FORMAT YOUR RESPONSE EXACTLY LIKE THIS (use this exact format with pipe | separators):
+SENTENCE1|French sentence here|Arabic translation here
+SENTENCE2|French sentence here|Arabic translation here
+SENTENCE3|French sentence here|Arabic translation here
+...and so on
+
+Example format:
+SENTENCE1|J'ai une grande opportunité aujourd'hui|لَدَيَّ فُرْصَة كَبِيرَة اليَوْم
+SENTENCE2|Le candidat a présenté son programme|قَدَّمَ المُرَشَّحُ بَرْنَامَجَه
+
+Do NOT include any other text, explanations, or formatting. ONLY the sentences in the exact format shown above.`;
+
+        // Call Gemini API
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 2048,
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'API request failed');
+        }
+
+        const data = await response.json();
+        const generatedText = data.candidates[0].content.parts[0].text;
+
+        // Parse the response
+        speakingSentences = parseSentences(generatedText, count);
+
+        if (speakingSentences.length === 0) {
+            throw new Error('Failed to parse sentences from API response');
+        }
+    }
+
+    function parseSentences(text, expectedCount) {
+        const sentences = [];
+        const lines = text.trim().split('\n');
+
+        for (const line of lines) {
+            // Match lines in format: SENTENCE1|French text|Arabic text
+            const match = line.match(/SENTENCE\d+\|(.+?)\|(.+?)$/);
+            if (match) {
+                sentences.push({
+                    french: match[1].trim(),
+                    arabic: match[2].trim()
+                });
+            }
+        }
+
+        return sentences;
+    }
+
+    function displayCurrentSentence() {
+        if (currentSentenceIndex >= speakingSentences.length) {
+            showCompletionScreen();
+            return;
+        }
+
+        const sentence = speakingSentences[currentSentenceIndex];
+
+        // Display the French sentence (tense1), hide Arabic translation (tense2)
+        document.getElementById('currentSentence').textContent = sentence.french;
+        document.getElementById('translationDisplay').textContent = sentence.arabic;
+        document.getElementById('translationDisplay').style.display = 'none';
+
+        // Reset buttons
+        document.getElementById('revealBtn').style.display = 'inline-block';
+        document.getElementById('answerButtons').style.display = 'none';
+
+        // Update progress
+        updateSpeakingStats();
+    }
+
+    function revealTranslation() {
+        document.getElementById('translationDisplay').style.display = 'block';
+        document.getElementById('revealBtn').style.display = 'none';
+        document.getElementById('answerButtons').style.display = 'flex';
+    }
+
+    function markAnswer(isCorrect) {
+        if (isCorrect) {
+            speakingStats.correct++;
+        } else {
+            speakingStats.wrong++;
+        }
+
+        updateSpeakingStats();
+
+        // Move to next sentence
+        currentSentenceIndex++;
+
+        setTimeout(() => {
+            displayCurrentSentence();
+        }, 300);
+    }
+
+    function updateSpeakingStats() {
+        document.getElementById('speakingCorrect').textContent = speakingStats.correct;
+        document.getElementById('speakingWrong').textContent = speakingStats.wrong;
+        document.getElementById('speakingProgress').textContent = `${currentSentenceIndex}/${speakingSentences.length}`;
+    }
+
+    function showCompletionScreen() {
+        document.getElementById('sentenceDisplay').style.display = 'none';
+        document.getElementById('completionScreen').style.display = 'block';
+
+        const total = speakingStats.correct + speakingStats.wrong;
+        const score = total > 0 ? Math.round((speakingStats.correct / total) * 100) : 0;
+
+        document.getElementById('finalCorrect').textContent = speakingStats.correct;
+        document.getElementById('finalWrong').textContent = speakingStats.wrong;
+        document.getElementById('finalScore').textContent = score + '%';
+    }
+
+    function resetSpeakingPractice() {
+        document.getElementById('speakingControls').style.display = 'block';
+        document.getElementById('speakingContent').style.display = 'none';
+        document.getElementById('sentenceDisplay').style.display = 'none';
+        document.getElementById('completionScreen').style.display = 'none';
+        document.getElementById('loadingIndicator').style.display = 'none';
+
+        speakingSentences = [];
+        currentSentenceIndex = 0;
+        speakingStats = { correct: 0, wrong: 0 };
+    }
+
     // ============================================================================
     // END OF SCRIPT
     // ============================================================================
