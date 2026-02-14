@@ -492,16 +492,16 @@
                 <div class="glass-card main-card fade-in-up">
                     <div class="stats-bar">
                         <div class="stat-item">
-                            <div class="stat-value" id="speakingCorrect">0</div>
-                            <div class="stat-label">Correct</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="speakingWrong">0</div>
-                            <div class="stat-label">Wrong</div>
+                            <div class="stat-value" id="speakingTotal">0/20</div>
+                            <div class="stat-label">Total Sessions</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="speakingProgress">0/10</div>
                             <div class="stat-label">Progress</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="speakingScore">0%</div>
+                            <div class="stat-label">Accuracy</div>
                         </div>
                     </div>
 
@@ -3018,16 +3018,21 @@
             const verbTotal = parseInt(getLocalStorageValue(getStorageKey('verbs'))) || 0;
             const verbGoal = getGoal(getStorageKey('verbs'));
             document.getElementById("verbTotal").innerText = `${verbTotal}/${verbGoal}`;
-            
+
             // Update number stats
             const numberTotal = parseInt(getLocalStorageValue(getStorageKey('number'))) || 0;
             const numberGoal = getGoal(getStorageKey('number'));
             document.getElementById("numberTotal").innerText = `${numberTotal}/${numberGoal}`;
-            
+
             // Update expression stats
             const expressionTotal = parseInt(getLocalStorageValue(getStorageKey('expression'))) || 0;
             const expressionGoal = getGoal(getStorageKey('expression'));
             document.getElementById("expressionTotal").innerText = `${expressionTotal}/${expressionGoal}`;
+
+            // Update speaking stats
+            const speakingTotal = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
+            const speakingGoal = getGoal(getStorageKey('speaking'));
+            document.getElementById("speakingTotal").innerText = `${speakingTotal}/${speakingGoal}`;
         }
 
         // ============================================================================
@@ -3762,6 +3767,9 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
             speakingStats.correct++;
         } else {
             speakingStats.wrong++;
+            // Add this sentence back to the end of the list
+            const currentSentence = speakingSentences[currentSentenceIndex];
+            speakingSentences.push(currentSentence);
         }
 
         updateSpeakingStats();
@@ -3775,9 +3783,11 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
     }
 
     function updateSpeakingStats() {
-        document.getElementById('speakingCorrect').textContent = speakingStats.correct;
-        document.getElementById('speakingWrong').textContent = speakingStats.wrong;
+        const total = speakingStats.correct + speakingStats.wrong;
+        const accuracy = total > 0 ? Math.round((speakingStats.correct / total) * 100) : 0;
+
         document.getElementById('speakingProgress').textContent = `${currentSentenceIndex}/${speakingSentences.length}`;
+        document.getElementById('speakingScore').textContent = `${accuracy}%`;
     }
 
     function showCompletionScreen() {
@@ -3790,6 +3800,11 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
         document.getElementById('finalCorrect').textContent = speakingStats.correct;
         document.getElementById('finalWrong').textContent = speakingStats.wrong;
         document.getElementById('finalScore').textContent = score + '%';
+
+        // Increment total sessions count in localStorage
+        const completions = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
+        setLocalStorageValue(getStorageKey('speaking'), completions + 1);
+        updateAllStats();
     }
 
     function resetSpeakingPractice() {
