@@ -508,6 +508,11 @@
                     <div class="text-center mt-4">
                         <div id="speakingControls" class="mb-4">
                             <div class="mb-3">
+                                <label for="geminiApiKey" class="form-label">Google Gemini API Key:</label>
+                                <input type="password" id="geminiApiKey" class="form-control" placeholder="Enter your Gemini API key">
+                                <small class="text-muted">Get a free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                            </div>
+                            <div class="mb-3">
                                 <label for="sentenceCount" class="form-label">Number of sentences:</label>
                                 <input type="number" id="sentenceCount" class="form-control d-inline-block" style="width: 100px;" value="10" min="1" max="20">
                             </div>
@@ -3007,7 +3012,13 @@
                     updateAllStats();
                 });
             });
-            
+
+            // Load saved API key from localStorage
+            const savedApiKey = localStorage.getItem('gemini_api_key');
+            if (savedApiKey) {
+                document.getElementById('geminiApiKey').value = savedApiKey;
+            }
+
             // Initialize the app
             createWordLists();
             updateAllStats();
@@ -3589,17 +3600,16 @@
     // SPEAKING PRACTICE
     // ============================================================================
 
-    const GEMINI_API_KEY = 'AIzaSyBFJ2_rrI1tnwoLBGwBXfh2vmP4Ty0Plx8';
-
     let speakingSentences = [];
     let currentSentenceIndex = 0;
     let speakingStats = { correct: 0, wrong: 0 };
 
     async function startSpeakingPractice() {
+        const apiKey = document.getElementById('geminiApiKey').value.trim();
         const sentenceCount = parseInt(document.getElementById('sentenceCount').value);
 
-        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
-            alert('Please configure your Gemini API key in the config file');
+        if (!apiKey) {
+            alert('Please enter your Google Gemini API key');
             return;
         }
 
@@ -3609,6 +3619,9 @@
             return;
         }
 
+        // Save API key to localStorage
+        localStorage.setItem('gemini_api_key', apiKey);
+
         // Show loading indicator
         document.getElementById('speakingControls').style.display = 'none';
         document.getElementById('speakingContent').style.display = 'block';
@@ -3616,7 +3629,7 @@
 
         try {
             // Generate sentences using Gemini API
-            await generateSentences(GEMINI_API_KEY, sentenceCount);
+            await generateSentences(apiKey, sentenceCount);
 
             // Hide loading, show first sentence
             document.getElementById('loadingIndicator').style.display = 'none';
