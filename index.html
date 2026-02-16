@@ -496,6 +496,10 @@
                             <div class="stat-label">Total Sessions</div>
                         </div>
                         <div class="stat-item">
+                            <div class="stat-value" id="speakingTimer">0:00</div>
+                            <div class="stat-label">Time</div>
+                        </div>
+                        <div class="stat-item">
                             <div class="stat-value" id="speakingProgress">0/10</div>
                             <div class="stat-label">Progress</div>
                         </div>
@@ -553,6 +557,10 @@
                             <div id="completionScreen" style="display: none;">
                                 <h3 class="mb-4">Practice Complete!</h3>
                                 <div class="stats-bar mb-4">
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="finalTime">0:00</div>
+                                        <div class="stat-label">Time</div>
+                                    </div>
                                     <div class="stat-item">
                                         <div class="stat-value" id="finalCorrect">0</div>
                                         <div class="stat-label">Correct</div>
@@ -3603,6 +3611,8 @@
     let speakingSentences = [];
     let currentSentenceIndex = 0;
     let speakingStats = { correct: 0, wrong: 0 };
+    let speakingTimer = 0;
+    let speakingTimerInterval = null;
 
     async function startSpeakingPractice() {
         const apiKey = document.getElementById('geminiApiKey').value.trim();
@@ -3635,10 +3645,14 @@
             document.getElementById('loadingIndicator').style.display = 'none';
             document.getElementById('sentenceDisplay').style.display = 'block';
 
-            // Reset stats
+            // Reset stats and timer
             speakingStats = { correct: 0, wrong: 0 };
             currentSentenceIndex = 0;
+            speakingTimer = 0;
             updateSpeakingStats();
+
+            // Start timer
+            startSpeakingTimer();
 
             // Display first sentence
             displayCurrentSentence();
@@ -3678,7 +3692,7 @@ IMPORTANT INSTRUCTIONS:
 1. Generate exactly ${count} sentences, one for each word
 2. Each sentence should be in French with its Arabic translation
 3. For verbs, feel free to conjugate them in any tense (past, present, future, imperative, etc.)
-4. For nouns, you can use them in singular, plural, or dual form
+4. For nouns, you can use them in singular, plural, or dual form, but be consistent with the translation.
 5. Make sentences of reasonable length (5-15 words)
 6. Make the sentences practical and useful for language learning
 7. Ensure the Arabic translation uses the exact word form provided (or a conjugated/declined form of it)
@@ -3804,12 +3818,21 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
     }
 
     function showCompletionScreen() {
+        // Stop timer
+        stopSpeakingTimer();
+
         document.getElementById('sentenceDisplay').style.display = 'none';
         document.getElementById('completionScreen').style.display = 'block';
 
         const total = speakingStats.correct + speakingStats.wrong;
         const score = total > 0 ? Math.round((speakingStats.correct / total) * 100) : 0;
 
+        // Format and display final time
+        const minutes = Math.floor(speakingTimer / 60);
+        const seconds = speakingTimer % 60;
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        document.getElementById('finalTime').textContent = timeString;
         document.getElementById('finalCorrect').textContent = speakingStats.correct;
         document.getElementById('finalWrong').textContent = speakingStats.wrong;
         document.getElementById('finalScore').textContent = score + '%';
@@ -3821,6 +3844,8 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
     }
 
     function resetSpeakingPractice() {
+        stopSpeakingTimer();
+
         document.getElementById('speakingControls').style.display = 'block';
         document.getElementById('speakingContent').style.display = 'none';
         document.getElementById('sentenceDisplay').style.display = 'none';
@@ -3830,6 +3855,31 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
         speakingSentences = [];
         currentSentenceIndex = 0;
         speakingStats = { correct: 0, wrong: 0 };
+        speakingTimer = 0;
+        document.getElementById('speakingTimer').textContent = '0:00';
+    }
+
+    function startSpeakingTimer() {
+        stopSpeakingTimer(); // Clear any existing timer
+        speakingTimer = 0;
+        speakingTimerInterval = setInterval(() => {
+            speakingTimer++;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopSpeakingTimer() {
+        if (speakingTimerInterval) {
+            clearInterval(speakingTimerInterval);
+            speakingTimerInterval = null;
+        }
+    }
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(speakingTimer / 60);
+        const seconds = speakingTimer % 60;
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('speakingTimer').textContent = timeString;
     }
 
     // ============================================================================
