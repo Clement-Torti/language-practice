@@ -517,8 +517,7 @@
                                 <small class="text-muted">Get a free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
                             </div>
                             <div class="mb-3">
-                                <label for="sentenceCount" class="form-label">Number of sentences:</label>
-                                <input type="number" id="sentenceCount" class="form-control d-inline-block" style="width: 100px;" value="10" min="1" max="20">
+                                <small style="color: var(--text-light);">Generates 8 new sentences each session + up to 24 from the last 3 sessions (shuffled).</small>
                             </div>
                             <button class="btn btn-gradient" onclick="startSpeakingPractice()">
                                 <i class="fas fa-play me-2"></i>Start Practice
@@ -3641,16 +3640,9 @@
 
     async function startSpeakingPractice() {
         const apiKey = document.getElementById('geminiApiKey').value.trim();
-        const sentenceCount = parseInt(document.getElementById('sentenceCount').value);
 
         if (!apiKey) {
             alert('Please enter your Google Gemini API key');
-            return;
-        }
-
-        // Validate sentence count
-        if (sentenceCount < 1 || sentenceCount > 20) {
-            alert('Please enter a number between 1 and 20');
             return;
         }
 
@@ -3663,8 +3655,20 @@
         document.getElementById('loadingIndicator').style.display = 'block';
 
         try {
-            // Generate sentences using Gemini API
-            await generateSentences(apiKey, sentenceCount);
+            // Generate 8 new sentences
+            const newSentences = await generateSentences(apiKey, 8);
+
+            // Load stored history (last 24 sentences = up to 3 previous sessions)
+            const historyKey = getStorageKey('speaking_history');
+            const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+
+            // Display: new 8 + all stored history, shuffled
+            const allSentences = [...history, ...newSentences];
+            speakingSentences = allSentences.sort(() => Math.random() - 0.5);
+
+            // Save updated history: keep only last 24 (drops oldest 8 when exceeding 24)
+            const updatedHistory = [...history, ...newSentences].slice(-24);
+            localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
 
             // Hide loading, show first sentence
             document.getElementById('loadingIndicator').style.display = 'none';
@@ -3762,11 +3766,13 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
         const generatedText = data.candidates[0].content.parts[0].text;
 
         // Parse the response
-        speakingSentences = parseSentences(generatedText, count);
+        const sentences = parseSentences(generatedText, count);
 
-        if (speakingSentences.length === 0) {
+        if (sentences.length === 0) {
             throw new Error('Failed to parse sentences from API response');
         }
+
+        return sentences;
     }
 
     function parseSentences(text, expectedCount) {
