@@ -633,7 +633,7 @@
                 { name: "الشرط الماضي", hint: "Conditionel passé: لَوْ درستُ، لَنَجَحْتُ" }, 
                 { name: "الشرط المضارع", hint: "Conditionel présent: إذا درسَ، سيَنجَحُ" }, 
                 { name: "المصدر", hint: "Nom verbale: دَرَسَ => دِرَاسَة" }
-            ], 
+            ],
             words: [
         {"tense1": "Opportunité", "tense2": "فُرْصَة / فُرَص / فُرْصَتَان / فُرَصًا / فُرْصَتَيْن", "type": "word"},
   {"tense1": "Candidat", "tense2": "مُرَشَّح / مُرَشَّحُون / مُرَشَّحَان / مُرَشَّحِين / مُرَشَّحَيْن", "type": "word"},
@@ -3884,15 +3884,6 @@ CORRECTED|your corrected Arabic translation here`;
                 const corrected = match[1].trim();
                 speakingSentences[currentSentenceIndex].arabic = corrected;
                 document.getElementById('translationDisplay').textContent = corrected;
-
-                // Persist the correction to localStorage history
-                const historyKey = getStorageKey('speaking_history');
-                const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
-                const idx = history.findIndex(s => s.french === sentence.french);
-                if (idx !== -1) {
-                    history[idx].arabic = corrected;
-                    localStorage.setItem(historyKey, JSON.stringify(history));
-                }
             }
         } catch (e) {
             console.error('Fix translation error:', e);
