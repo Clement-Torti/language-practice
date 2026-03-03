@@ -517,7 +517,7 @@
                                 <small class="text-muted">Get a free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
                             </div>
                             <div class="mb-3">
-                                <small style="color: var(--text-light);">Generates 8 new sentences each session + up to 24 from the last 3 sessions (shuffled).</small>
+                                <small style="color: var(--text-light);">Generates 7 new sentences each session + up to 21 from the last 3 sessions (shuffled).</small>
                             </div>
                             <button class="btn btn-gradient" onclick="startSpeakingPractice()">
                                 <i class="fas fa-play me-2"></i>Start Practice
@@ -3682,8 +3682,8 @@
         document.getElementById('loadingIndicator').style.display = 'block';
 
         try {
-            // Generate 8 new sentences
-            const newSentences = await generateSentences(apiKey, 8);
+            // Generate 7 new sentences
+            const newSentences = await generateSentences(apiKey, 7);
 
             // Load stored history (last 24 sentences = up to 3 previous sessions)
             const historyKey = getStorageKey('speaking_history');
@@ -3693,8 +3693,8 @@
             const allSentences = [...history, ...newSentences];
             speakingSentences = allSentences.sort(() => Math.random() - 0.5);
 
-            // Save updated history: keep only last 24 (drops oldest 8 when exceeding 24)
-            const updatedHistory = [...history, ...newSentences].slice(-24);
+            // Save updated history: keep only last 21 (drops oldest 7 when exceeding 21)
+            const updatedHistory = [...history, ...newSentences].slice(-21);
             localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
 
             // Hide loading, show first sentence
