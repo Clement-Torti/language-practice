@@ -3884,6 +3884,15 @@ CORRECTED|your corrected Arabic translation here`;
                 const corrected = match[1].trim();
                 speakingSentences[currentSentenceIndex].arabic = corrected;
                 document.getElementById('translationDisplay').textContent = corrected;
+
+                // Persist the correction to localStorage history
+                const historyKey = getStorageKey('speaking_history');
+                const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+                const idx = history.findIndex(s => s.french === sentence.french);
+                if (idx !== -1) {
+                    history[idx].arabic = corrected;
+                    localStorage.setItem(historyKey, JSON.stringify(history));
+                }
             }
         } catch (e) {
             console.error('Fix translation error:', e);
