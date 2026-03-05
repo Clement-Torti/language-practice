@@ -2955,7 +2955,6 @@
 {"tense1": "fluctuer", "tense2": "تَقَلَّبَ/يَتَقَلَّبُ/تَقَلُّب/تَقَلَّبْ/يُتَقَلَّبُ/تُقُلِّبَ", "type": "verb"},
 {"tense1": "Fréquenter", "tense2": "اِرْتَادَ/يَرْتَادُ/اِرْتِيَاد/اِرْتَدْ/يُرْتَادُ/اُرْتِيدَ", "type": "verb"},
 {"tense1": "Ivresse", "tense2": "السُّكْر", "type": "word"},
-{"tense1": "examiner", "tense2": "اِطَّلَعَ/يَطَّلِعُ/اِطِّلَاع/اِطَّلِعْ/يُطَّلَعُ/اُطُّلِعَ", "type": "verb"},
 {"tense1": "tricot", "tense2": "حِيَاكَة / حِيَاكَات / حِيَاكَتَان / حِيَاكَاتٍ / حِيَاكَتَيْن", "type": "word"},
 {"tense1": "menuiserie", "tense2": "نِجَارَة / نِجَارَات / نِجَارَتَان / نِجَارَاتٍ / نِجَارَتَيْن", "type": "word"},
 {"tense1": "mentionner", "tense2": "وَرَدَ/يَرِدُ/وُرُود/اِرِدْ/يُورَدُ/وُرِدَ", "type": "verb"},
@@ -3688,6 +3687,8 @@
     let currentSentenceIndex = 0;
     let speakingStats = { correct: 0, wrong: 0 };
     let speakingTimer = 0;
+    let speakingHistoryKey = '';
+    let speakingHistory = []; // mirrors exactly what's saved in localStorage
     let speakingTimerInterval = null;
 
     async function startSpeakingPractice() {
@@ -3710,17 +3711,17 @@
             // Generate 7 new sentences
             const newSentences = await generateSentences(apiKey, 7);
 
-            // Load stored history (last 24 sentences = up to 3 previous sessions)
-            const historyKey = getStorageKey('speaking_history');
-            const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+            // Load stored history
+            speakingHistoryKey = getStorageKey('speaking_history');
+            const history = JSON.parse(localStorage.getItem(speakingHistoryKey) || '[]');
 
-            // Display: new 8 + all stored history, shuffled
-            const allSentences = [...history, ...newSentences];
+            // Display: last 21 from history + 7 new, shuffled (max 28)
+            const allSentences = [...history.slice(-21), ...newSentences];
             speakingSentences = allSentences.sort(() => Math.random() - 0.5);
 
             // Save updated history: keep only last 21 (drops oldest 7 when exceeding 21)
-            const updatedHistory = [...history, ...newSentences].slice(-21);
-            localStorage.setItem(historyKey, JSON.stringify(updatedHistory));
+            speakingHistory = [...history, ...newSentences].slice(-21);
+            localStorage.setItem(speakingHistoryKey, JSON.stringify(speakingHistory));
 
             // Hide loading, show first sentence
             document.getElementById('loadingIndicator').style.display = 'none';
@@ -3909,6 +3910,13 @@ CORRECTED|your corrected Arabic translation here`;
                 const corrected = match[1].trim();
                 speakingSentences[currentSentenceIndex].arabic = corrected;
                 document.getElementById('translationDisplay').textContent = corrected;
+
+                // Persist to localStorage via speakingHistory (exact mirror of what's stored)
+                const idx = speakingHistory.findIndex(s => s.french === sentence.french);
+                if (idx !== -1) {
+                    speakingHistory[idx].arabic = corrected;
+                    localStorage.setItem(speakingHistoryKey, JSON.stringify(speakingHistory));
+                }
             }
         } catch (e) {
             console.error('Fix translation error:', e);
