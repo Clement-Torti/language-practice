@@ -517,7 +517,7 @@
                                 <small class="text-muted">Get a free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
                             </div>
                             <div class="mb-3">
-                                <small style="color: var(--text-light);">Generates 7 new sentences each session + up to 21 from the last 3 sessions (shuffled).</small>
+                                <small style="color: var(--text-light);">6 new sentences per session · spaced repetition: reviewed on days 1, 2, 4, 7, 20 · ~30 sentences per session.</small>
                             </div>
                             <button class="btn btn-gradient" onclick="startSpeakingPractice()">
                                 <i class="fas fa-play me-2"></i>Start Practice
@@ -547,7 +547,8 @@
                             </div>
 
                             <div id="sentenceDisplay" style="display: none;">
-                                <div class="sentence-card glass-card p-4 mb-4">
+                                <div class="sentence-card glass-card p-4 mb-4" style="position: relative;">
+                                    <span id="reviewDayBadge" style="position: absolute; top: 8px; right: 12px; font-size: 0.7rem; opacity: 0.35; color: var(--text-light);"></span>
                                     <div class="sentence-display" id="currentSentence"></div>
                                     <div id="translationDisplay" class="translation mt-3" style="display: none;"></div>
                                 </div>
@@ -3708,19 +3709,52 @@
         document.getElementById('loadingIndicator').style.display = 'block';
 
         try {
-            // Generate 7 new sentences
-            const newSentences = await generateSentences(apiKey, 7);
+            const TODAY = new Date().toISOString().split('T')[0];
+            const todayDate = new Date(TODAY);
+            const REVIEW_OFFSETS = [0, 1, 3, 6, 19]; // days after generation a sentence is due
+            const TARGET = 30;
 
-            // Load stored history
+            // Load stored history; migrate old entries that lack a date to filler (2 days ago)
             speakingHistoryKey = getStorageKey('speaking_history');
-            const history = JSON.parse(localStorage.getItem(speakingHistoryKey) || '[]');
+            const rawHistory = JSON.parse(localStorage.getItem(speakingHistoryKey) || '[]');
+            const pastDate = new Date(); pastDate.setDate(pastDate.getDate() - 2);
+            const pastDateStr = pastDate.toISOString().split('T')[0];
+            const allHistory = rawHistory.map(s => s.date ? s : { ...s, date: pastDateStr });
 
-            // Display: last 21 from history + 7 new, shuffled (max 28)
-            const allSentences = [...history.slice(-21), ...newSentences];
-            speakingSentences = allSentences.sort(() => Math.random() - 0.5);
+            // Drop sentences past their last review day (> 19 days old)
+            const activeHistory = allHistory.filter(s => {
+                const diff = Math.round((todayDate - new Date(s.date)) / 86400000);
+                return diff <= 19;
+            });
 
-            // Save updated history: keep only last 21 (drops oldest 7 when exceeding 21)
-            speakingHistory = [...history, ...newSentences].slice(-21);
+            // Generate 6 new sentences for today
+            const OFFSET_TO_DAY = { 0: 1, 1: 2, 3: 4, 6: 7, 19: 20 };
+            const newSentences = await generateSentences(apiKey, 6);
+            const todaySentences = newSentences.map(s => ({ ...s, date: TODAY, reviewDay: 1 }));
+
+            // Sentences from history that are due today (offset > 0 to exclude today's new batch)
+            const dueSentences = activeHistory
+                .filter(s => {
+                    const diff = Math.round((todayDate - new Date(s.date)) / 86400000);
+                    return diff > 0 && REVIEW_OFFSETS.includes(diff);
+                })
+                .map(s => {
+                    const diff = Math.round((todayDate - new Date(s.date)) / 86400000);
+                    return { ...s, reviewDay: OFFSET_TO_DAY[diff] };
+                });
+
+            // Filler: stored sentences not due today, to reach TARGET if needed
+            const dueKeys = new Set(dueSentences.map(s => s.french));
+            const filler = activeHistory
+                .filter(s => !dueKeys.has(s.french))
+                .map(s => ({ ...s, reviewDay: 0 }));
+
+            // Build display: new → due → filler, capped at TARGET, then shuffle
+            const displayPool = [...todaySentences, ...dueSentences, ...filler].slice(0, TARGET);
+            speakingSentences = displayPool.sort(() => Math.random() - 0.5);
+
+            // Save: active history + today's new sentences
+            speakingHistory = [...activeHistory, ...todaySentences];
             localStorage.setItem(speakingHistoryKey, JSON.stringify(speakingHistory));
 
             // Hide loading, show first sentence
@@ -3858,6 +3892,7 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
         document.getElementById('currentSentence').textContent = sentence.french;
         document.getElementById('translationDisplay').textContent = sentence.arabic;
         document.getElementById('translationDisplay').style.display = 'none';
+        document.getElementById('reviewDayBadge').textContent = sentence.reviewDay != null ? `j${sentence.reviewDay}` : '';
 
         // Reset buttons
         document.getElementById('revealBtn').style.display = 'inline-block';
@@ -3937,7 +3972,21 @@ CORRECTED|your corrected Arabic translation here`;
         try {
             const newSentences = await generateSentences(apiKey, 1);
             if (newSentences.length > 0) {
-                speakingSentences[currentSentenceIndex] = newSentences[0];
+                const TODAY = new Date().toISOString().split('T')[0];
+                const oldSentence = speakingSentences[currentSentenceIndex];
+                const newSentence = { ...newSentences[0], date: TODAY };
+
+                speakingSentences[currentSentenceIndex] = newSentence;
+
+                // Update speakingHistory: swap old sentence out, new one in
+                const idx = speakingHistory.findIndex(s => s.french === oldSentence.french);
+                if (idx !== -1) {
+                    speakingHistory[idx] = newSentence;
+                } else {
+                    speakingHistory.push(newSentence);
+                }
+                localStorage.setItem(speakingHistoryKey, JSON.stringify(speakingHistory));
+
                 displayCurrentSentence();
             }
         } catch (e) {
