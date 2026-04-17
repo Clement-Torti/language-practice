@@ -522,6 +522,10 @@
                             <button class="btn btn-gradient" onclick="startSpeakingPractice()">
                                 <i class="fas fa-play me-2"></i>Start Practice
                             </button>
+                            <button class="btn btn-sm ms-3" onclick="startSpeakingPracticeNoGenerate()"
+                                style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light);">
+                                <i class="fas fa-history me-1"></i>Start with saved sentences
+                            </button>
                             <button class="btn btn-sm ms-3" onclick="clearSpeakingHistory()"
                                 style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light); opacity: 0.6;">
                                 <i class="fas fa-trash-alt me-1"></i>Clear History
@@ -3825,6 +3829,70 @@
         } catch (error) {
             console.error('Error generating sentences:', error);
             alert('Error generating sentences: ' + error.message);
+            resetSpeakingPractice();
+        }
+    }
+
+    async function startSpeakingPracticeNoGenerate() {
+        document.getElementById('speakingControls').style.display = 'none';
+        document.getElementById('speakingContent').style.display = 'block';
+
+        try {
+            const TODAY = new Date().toISOString().split('T')[0];
+            const todayDate = new Date(TODAY);
+            const REVIEW_OFFSETS = [0, 1, 3, 6, 19];
+            const TARGET = 30;
+
+            speakingHistoryKey = getStorageKey('speaking_history');
+            const rawHistory = JSON.parse(localStorage.getItem(speakingHistoryKey) || '[]');
+            const pastDate = new Date(); pastDate.setDate(pastDate.getDate() - 2);
+            const pastDateStr = pastDate.toISOString().split('T')[0];
+            const allHistory = rawHistory.map(s => s.date ? s : { ...s, date: pastDateStr });
+
+            const activeHistory = allHistory.filter(s => {
+                const diff = Math.round((todayDate - new Date(s.date)) / 86400000);
+                return diff <= 19;
+            });
+
+            if (activeHistory.length === 0) {
+                alert('No saved sentences found. Use "Start Practice" to generate new sentences first.');
+                resetSpeakingPractice();
+                return;
+            }
+
+            const OFFSET_TO_DAY = { 0: 1, 1: 2, 3: 4, 6: 7, 19: 20 };
+            const dueSentences = activeHistory
+                .filter(s => {
+                    const diff = Math.round((todayDate - new Date(s.date)) / 86400000);
+                    return diff > 0 && REVIEW_OFFSETS.includes(diff);
+                })
+                .map(s => {
+                    const diff = Math.round((todayDate - new Date(s.date)) / 86400000);
+                    return { ...s, reviewDay: OFFSET_TO_DAY[diff] };
+                });
+
+            const dueKeys = new Set(dueSentences.map(s => s.french));
+            const filler = activeHistory
+                .filter(s => !dueKeys.has(s.french))
+                .map(s => ({ ...s, reviewDay: 0 }));
+
+            const displayPool = [...dueSentences, ...filler].slice(0, TARGET);
+            speakingSentences = displayPool.sort(() => Math.random() - 0.5);
+
+            speakingHistory = activeHistory;
+
+            document.getElementById('sentenceDisplay').style.display = 'block';
+
+            speakingStats = { correct: 0, wrong: 0 };
+            currentSentenceIndex = 0;
+            speakingTimer = 0;
+            updateSpeakingStats();
+
+            startSpeakingTimer();
+            displayCurrentSentence();
+        } catch (error) {
+            console.error('Error starting practice:', error);
+            alert('Error starting practice: ' + error.message);
             resetSpeakingPractice();
         }
     }
