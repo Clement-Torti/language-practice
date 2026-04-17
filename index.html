@@ -519,17 +519,19 @@
                             <div class="mb-3">
                                 <small style="color: var(--text-light);">6 new sentences per session · spaced repetition: reviewed on days 1, 2, 4, 7, 20 · ~30 sentences per session.</small>
                             </div>
-                            <button class="btn btn-gradient" onclick="startSpeakingPractice()">
-                                <i class="fas fa-play me-2"></i>Start Practice
-                            </button>
-                            <button class="btn btn-sm ms-3" onclick="startSpeakingPracticeNoGenerate()"
-                                style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light);">
-                                <i class="fas fa-history me-1"></i>Start with saved sentences
-                            </button>
-                            <button class="btn btn-sm ms-3" onclick="clearSpeakingHistory()"
-                                style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light); opacity: 0.6;">
-                                <i class="fas fa-trash-alt me-1"></i>Clear History
-                            </button>
+                            <div class="d-flex flex-wrap justify-content-center gap-3">
+                                <button class="btn btn-gradient" onclick="startSpeakingPractice()">
+                                    <i class="fas fa-play me-2"></i>Start Practice
+                                </button>
+                                <button class="btn btn-sm" onclick="startSpeakingPracticeNoGenerate()"
+                                    style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light);">
+                                    <i class="fas fa-history me-1"></i>Start with saved sentences
+                                </button>
+                                <button class="btn btn-sm" onclick="clearSpeakingHistory()"
+                                    style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light); opacity: 0.6;">
+                                    <i class="fas fa-trash-alt me-1"></i>Clear History
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Clear history confirmation modal -->
