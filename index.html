@@ -4225,7 +4225,7 @@ FIXED|corrected French sentence here|corrected Arabic translation here`;
             .sort((a, b) => a.date - b.date)
             .map(s => {
                 const diff = currentCount - s.date;
-                const label = OFFSET_TO_DAY[diff] != null ? `J${OFFSET_TO_DAY[diff]}` : (diff > 19 ? 'expired' : `diff ${diff}`);
+                const label = OFFSET_TO_DAY[diff] != null ? `J${OFFSET_TO_DAY[diff]}` : (diff > 19 ? 'expired' : `filler (${diff})`);
                 const next = nextReview(s.date);
                 return `<div style="border-bottom:1px solid var(--border-color); padding:8px 0; font-size:0.85rem;">
                     <div style="display:flex; justify-content:space-between; gap:8px;">
