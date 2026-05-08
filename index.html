@@ -556,7 +556,14 @@
                                 <div class="sentence-card glass-card p-4 mb-4" style="position: relative;">
                                     <span id="reviewDayBadge" style="position: absolute; top: 8px; right: 12px; font-size: 0.7rem; opacity: 0.35; color: var(--text-light);"></span>
                                     <div class="sentence-display" id="currentSentence"></div>
-                                    <div id="translationDisplay" class="translation mt-3" style="display: none;"></div>
+                                    <div id="translationDisplay" class="translation mt-3" style="display: none;">
+                                        <span id="translationText"></span>
+                                        <button onclick="speakText(document.getElementById('translationText').textContent)"
+                                            style="background: none; border: none; cursor: pointer; color: var(--text-muted); margin-left: 10px; vertical-align: middle; font-size: 1rem;"
+                                            title="Pronounce">
+                                            <i class="fas fa-volume-up"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="button-group">
@@ -3995,7 +4002,7 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
 
         // Display the French sentence (tense1), hide Arabic translation (tense2)
         document.getElementById('currentSentence').textContent = sentence.french;
-        document.getElementById('translationDisplay').textContent = sentence.arabic;
+        document.getElementById('translationText').textContent = sentence.arabic;
         document.getElementById('translationDisplay').style.display = 'none';
         document.getElementById('reviewDayBadge').textContent = sentence.reviewDay != null ? `j${sentence.reviewDay}` : '';
 
@@ -4053,7 +4060,7 @@ FIXED|corrected French sentence here|corrected Arabic translation here`;
                 speakingSentences[currentSentenceIndex].french = fixedFrench;
                 speakingSentences[currentSentenceIndex].arabic = fixedArabic;
                 document.getElementById('currentSentence').textContent = fixedFrench;
-                document.getElementById('translationDisplay').textContent = fixedArabic;
+                document.getElementById('translationText').textContent = fixedArabic;
 
                 // Persist both sides to localStorage
                 const idx = speakingHistory.findIndex(s => s.french === sentence.french);
