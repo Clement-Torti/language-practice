@@ -3803,8 +3803,14 @@
             const rawHistory = JSON.parse(localStorage.getItem(speakingHistoryKey) || '[]');
             const allHistory = rawHistory.map(s => typeof s.date === 'number' ? s : { ...s, date: currentCount - 2 });
 
+            // Deduplicate by french text, keeping the earliest introduction
+            const seenFrench = new Map();
+            allHistory.forEach(s => {
+                if (!seenFrench.has(s.french) || s.date < seenFrench.get(s.french).date) seenFrench.set(s.french, s);
+            });
+
             // Drop sentences past their last review (> 19 challenges since introduction)
-            const activeHistory = allHistory.filter(s => currentCount - s.date <= 19);
+            const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= 19);
 
             // Generate 6 new sentences for this session
             const newSentences = await generateSentences(apiKey, 6);
@@ -3818,13 +3824,14 @@
                 })
                 .map(s => ({ ...s, reviewDay: OFFSET_TO_DAY[currentCount - s.date] }));
 
-            // Filler: stored sentences not due this session, to reach TARGET if needed
+            // Filler: stored sentences not due this session, shuffled so different ones appear each session
             const dueKeys = new Set(dueSentences.map(s => s.french));
             const filler = activeHistory
                 .filter(s => !dueKeys.has(s.french))
-                .map(s => ({ ...s, reviewDay: 0 }));
+                .map(s => ({ ...s, reviewDay: 0 }))
+                .sort(() => Math.random() - 0.5);
 
-            // Build display: new → due → filler, capped at TARGET, then shuffle
+            // Build display: new → due → random filler, capped at TARGET, then shuffle
             const displayPool = [...todaySentences, ...dueSentences, ...filler].slice(0, TARGET);
             speakingSentences = displayPool.sort(() => Math.random() - 0.5);
 
@@ -3869,7 +3876,12 @@
             const rawHistory = JSON.parse(localStorage.getItem(speakingHistoryKey) || '[]');
             const allHistory = rawHistory.map(s => typeof s.date === 'number' ? s : { ...s, date: currentCount - 2 });
 
-            const activeHistory = allHistory.filter(s => currentCount - s.date <= 19);
+            const seenFrench = new Map();
+            allHistory.forEach(s => {
+                if (!seenFrench.has(s.french) || s.date < seenFrench.get(s.french).date) seenFrench.set(s.french, s);
+            });
+
+            const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= 19);
 
             if (activeHistory.length === 0) {
                 alert('No saved sentences found. Use "Start Practice" to generate new sentences first.');
@@ -3887,7 +3899,8 @@
             const dueKeys = new Set(dueSentences.map(s => s.french));
             const filler = activeHistory
                 .filter(s => !dueKeys.has(s.french))
-                .map(s => ({ ...s, reviewDay: 0 }));
+                .map(s => ({ ...s, reviewDay: 0 }))
+                .sort(() => Math.random() - 0.5);
 
             const displayPool = [...dueSentences, ...filler].slice(0, TARGET);
             speakingSentences = displayPool.sort(() => Math.random() - 0.5);
