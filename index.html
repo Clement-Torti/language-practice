@@ -3793,7 +3793,7 @@
         try {
             const REVIEW_OFFSETS = [0, 1, 3, 6, 19]; // challenges after intro a sentence is due
             const OFFSET_TO_DAY = { 0: 1, 1: 2, 3: 4, 6: 7, 19: 20 };
-            const TARGET = 30;
+            const TARGET = 50;
 
             // Current challenge counter (incremented at session end)
             const currentCount = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
@@ -3812,8 +3812,8 @@
             // Drop sentences past their last review (> 19 challenges since introduction)
             const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= 19);
 
-            // Generate 6 new sentences for this session
-            const newSentences = await generateSentences(apiKey, 6);
+            // Generate 10 new sentences for this session
+            const newSentences = await generateSentences(apiKey, 10);
             const todaySentences = newSentences.map(s => ({ ...s, date: currentCount, reviewDay: 1 }));
 
             // Sentences from history due this session (diff > 0 to exclude this session's new batch)
@@ -3868,7 +3868,7 @@
         try {
             const REVIEW_OFFSETS = [0, 1, 3, 6, 19];
             const OFFSET_TO_DAY = { 0: 1, 1: 2, 3: 4, 6: 7, 19: 20 };
-            const TARGET = 30;
+            const TARGET = 50;
 
             const currentCount = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
 
