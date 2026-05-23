@@ -3773,6 +3773,7 @@
     let speakingHistoryKey = '';
     let speakingHistory = []; // mirrors exactly what's saved in localStorage
     let speakingTimerInterval = null;
+    let speakingNoCount = false; // true when session should not increment the counter
 
     async function startSpeakingPractice() {
         const apiKey = document.getElementById('geminiApiKey').value.trim();
@@ -3849,7 +3850,7 @@
             speakingTimer = 0;
             updateSpeakingStats();
 
-            // Start timer
+            speakingNoCount = false;
             startSpeakingTimer();
 
             // Display first sentence
@@ -3915,6 +3916,7 @@
             speakingTimer = 0;
             updateSpeakingStats();
 
+            speakingNoCount = true;
             startSpeakingTimer();
             displayCurrentSentence();
         } catch (error) {
@@ -4195,9 +4197,11 @@ FIXED|corrected French sentence here|corrected Arabic translation here`;
         document.getElementById('finalWrong').textContent = speakingStats.wrong;
         document.getElementById('finalScore').textContent = score + '%';
 
-        // Increment total sessions count in localStorage
-        const completions = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
-        setLocalStorageValue(getStorageKey('speaking'), completions + 1);
+        // Increment total sessions count in localStorage (not for "saved sentences" sessions)
+        if (!speakingNoCount) {
+            const completions = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
+            setLocalStorageValue(getStorageKey('speaking'), completions + 1);
+        }
         updateAllStats();
     }
 
