@@ -3930,7 +3930,7 @@
         const words = getCurrentLanguageData().words;
 
         // Select random words
-        const shuffled = [...words].sort(() => Math.random() - 0.5);
+        const shuffled = shuffleArray(words);
         const selectedWords = shuffled.slice(0, count);
 
         // Prepare words for the prompt
