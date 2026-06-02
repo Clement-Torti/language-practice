@@ -535,6 +535,14 @@
                                     style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light); opacity: 0.6;">
                                     <i class="fas fa-list me-1"></i>Inspect sentences
                                 </button>
+                                <button class="btn btn-sm" onclick="exportSpeakingHistory()"
+                                    style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light); opacity: 0.6;">
+                                    <i class="fas fa-copy me-1"></i>Export sentences
+                                </button>
+                                <button class="btn btn-sm" onclick="openImportSpeakingModal()"
+                                    style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light); opacity: 0.6;">
+                                    <i class="fas fa-file-import me-1"></i>Import sentences
+                                </button>
                             </div>
                         </div>
 
@@ -560,6 +568,26 @@
                                 <button class="btn btn-danger-gradient me-2" onclick="confirmClearHistory()">Yes, clear it</button>
                                 <button class="btn btn-sm" onclick="closeClearHistoryModal()"
                                     style="background:transparent; border:1px solid var(--border-color); color:var(--text-light);">Cancel</button>
+                            </div>
+                        </div>
+
+                        <!-- Import history modal -->
+                        <div id="importHistoryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+                            <div class="glass-card p-4" style="max-width:480px; width:100%; margin:auto;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 style="color:var(--text-light); margin:0;">Import sentences</h5>
+                                    <button onclick="document.getElementById('importHistoryModal').style.display='none'"
+                                        style="background:none; border:none; color:var(--text-muted); font-size:1.2rem; cursor:pointer;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <p style="color:var(--text-muted); font-size:0.85rem;" class="mb-2">Paste the exported JSON here. This will <strong>replace</strong> your current history and session counter.</p>
+                                <textarea id="importHistoryTextarea" rows="6" class="form-control mb-3" placeholder='{"language":"arabic","counter":12,"history":[...]}'></textarea>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-sm" onclick="document.getElementById('importHistoryModal').style.display='none'"
+                                        style="background:transparent; border:1px solid var(--border-color); color:var(--text-light);">Cancel</button>
+                                    <button class="btn btn-gradient" onclick="confirmImportSpeakingHistory()">Import</button>
+                                </div>
                             </div>
                         </div>
 
@@ -4217,6 +4245,35 @@ FIXED|corrected French sentence here|corrected Arabic translation here`;
     function confirmClearHistory() {
         localStorage.removeItem(getStorageKey('speaking_history'));
         closeClearHistoryModal();
+    }
+
+    function exportSpeakingHistory() {
+        const history = JSON.parse(localStorage.getItem(getStorageKey('speaking_history')) || '[]');
+        const counter = parseInt(localStorage.getItem(getStorageKey('speaking')) || '0');
+        const data = JSON.stringify({ language: currentLanguage, counter, history });
+        navigator.clipboard.writeText(data).then(() => {
+            const btn = document.querySelector('[onclick="exportSpeakingHistory()"]');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            setTimeout(() => { btn.innerHTML = original; }, 2000);
+        }).catch(() => alert('Could not copy to clipboard.'));
+    }
+
+    function openImportSpeakingModal() {
+        document.getElementById('importHistoryTextarea').value = '';
+        document.getElementById('importHistoryModal').style.display = 'flex';
+    }
+
+    function confirmImportSpeakingHistory() {
+        const raw = document.getElementById('importHistoryTextarea').value.trim();
+        let data;
+        try { data = JSON.parse(raw); } catch { return alert('Invalid JSON.'); }
+        if (!Array.isArray(data.history)) return alert('Invalid format: missing "history" array.');
+        localStorage.setItem(getStorageKey('speaking_history'), JSON.stringify(data.history));
+        if (typeof data.counter === 'number') localStorage.setItem(getStorageKey('speaking'), data.counter);
+        document.getElementById('importHistoryModal').style.display = 'none';
+        updateAllStats();
+        alert(`Imported ${data.history.length} sentences.`);
     }
 
     function openSentenceInspector() {
