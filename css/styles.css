@@ -1,0 +1,261 @@
+:root {
+    --dark-bg: #121212;
+    --darker-bg: #0a0a0a;
+    --card-bg: #1e1e1e;
+    --text-light: #e0e0e0;
+    --text-muted: #aaaaaa;
+    --border-color: #333333;
+    --primary-color: #3a7bd5;
+    --success-color: #2ecc71;
+    --danger-color: #e74c3c;
+}
+    
+body {
+    background: var(--dark-bg);
+    min-height: 100vh;
+    color: var(--text-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+    
+/* Simplified card design */
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+    
+/* Navigation tabs */
+.nav-tabs {
+    border: none;
+    background: var(--darker-bg);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 20px;
+}
+    
+.nav-tabs .nav-link {
+    color: var(--text-light);
+    border: none;
+    border-radius: 6px;
+    margin: 0 3px;
+    padding: 8px 16px;
+}
+    
+.nav-tabs .nav-link.active {
+    background: var(--primary-color);
+    color: white;
+}
+    
+/* Language selector */
+.language-selector {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+    
+.language-selector .btn {
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-light);
+}
+    
+.language-selector .btn.active {
+    background: var(--primary-color);
+    border-color: transparent;
+}
+    
+/* Main content cards */
+.main-card {
+    min-height: 400px;
+    padding: 20px;
+}
+    
+.word-display {
+    font-size: 3rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.sentence-display {
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 15px 0;
+}
+    
+.word-form {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 10px;
+}
+    
+.translation {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    white-space: pre-line;
+}
+    
+/* Buttons */
+.btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 500;
+}
+    
+.btn-gradient {
+    background: var(--primary-color);
+    color: white;
+}
+    
+.btn-success-gradient {
+    background: var(--success-color);
+    color: white;
+}
+    
+.btn-danger-gradient {
+    background: var(--danger-color);
+    color: white;
+}
+    
+/* List items */
+.list-group-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    margin-bottom: 8px;
+    border-radius: 6px;
+}
+    
+/* Stats display */
+.stats-bar {
+    background: var(--darker-bg);
+    border-radius: 8px;
+    padding: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+    
+.stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+    
+.stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+    
+/* Progress bar */
+.progress-custom {
+    background: var(--darker-bg);
+    border-radius: 4px;
+    height: 6px;
+}
+    
+.progress-bar-custom {
+    background: var(--success-color);
+    border-radius: 4px;
+}
+    
+/* Hint modal */
+.hint-modal {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+    
+/* Favorite star */
+.favorite-star {
+    color: #ccc;
+}
+    
+.favorite-star.active {
+    color: gold;
+}
+    
+/* Responsive design */
+@media (max-width: 768px) {
+    .word-display { font-size: 3rem; }
+    .main-card { padding: 15px; }
+}
+    
+/* Image styling */
+.expression-image {
+    max-width: 100%;
+    height: 200px;
+    border-radius: 6px;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Speaking section styles */
+.sentence-card {
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#answerButtons {
+    display: flex;
+    gap: 10px;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+#speakingControls .form-control {
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+}
+
+#speakingControls .form-control:focus {
+    background: var(--card-bg);
+    border-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+#speakingControls .form-label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+#speakingControls a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+#speakingControls a:hover {
+    text-decoration: underline;
+}
