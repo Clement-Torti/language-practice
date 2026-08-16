@@ -47,26 +47,6 @@ body {
     color: white;
 }
     
-/* Language selector */
-.language-selector {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-    
-.language-selector .btn {
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    background: var(--card-bg);
-    color: var(--text-light);
-}
-    
-.language-selector .btn.active {
-    background: var(--primary-color);
-    border-color: transparent;
-}
-    
 /* Main content cards */
 .main-card {
     min-height: 400px;

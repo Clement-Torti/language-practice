@@ -1,15 +1,6 @@
 // Initialisation de l'app et statistiques globales
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Language selector event handlers
-    document.querySelectorAll('input[name="language"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            currentLanguage = this.id;
-            createWordLists();
-            updateAllStats();
-        });
-    });
-
     // Load saved API key from localStorage
     const savedApiKey = localStorage.getItem('gemini_api_key');
     if (savedApiKey) {
