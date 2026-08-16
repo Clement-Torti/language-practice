@@ -195,12 +195,6 @@ body {
 }
     
 /* Image styling */
-.expression-image {
-    max-width: 100%;
-    height: 200px;
-    border-radius: 6px;
-}
-
 @keyframes pulse {
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.1); opacity: 0.8; }
@@ -258,4 +252,208 @@ body {
 
 #speakingControls a:hover {
     text-decoration: underline;
+}
+
+/* ── Expression tab : conversation exercise ─────────────────────────── */
+
+.conv-intro {
+    background: rgba(58, 123, 213, 0.08);
+    border: 1px solid rgba(58, 123, 213, 0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+}
+
+.conv-intro-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    margin-bottom: 4px;
+}
+
+.conv-intro-text {
+    color: var(--text-light);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.conv-stage {
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.conv-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.conv-bar-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.conv-bar-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger-color);
+    display: inline-block;
+    animation: pulse 1.6s infinite;
+}
+
+.conv-icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.conv-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-light);
+}
+
+.conv-prev {
+    padding: 14px 20px 0;
+    margin: 0;
+    min-height: 42px;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: rgba(224, 224, 224, 0.3);
+}
+
+.conv-sep {
+    height: 1px;
+    background: var(--border-color);
+    margin: 12px 20px;
+}
+
+.conv-body {
+    padding: 0 20px 24px;
+    min-height: 190px;
+}
+
+.conv-speaker {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.conv-fr {
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-light);
+    margin-bottom: 14px;
+}
+
+.conv-ar {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.9;
+    color: var(--success-color);
+    margin: 0;
+    text-align: right;
+    min-height: 3.2rem;
+}
+
+.conv-ar.is-hidden {
+    color: rgba(224, 224, 224, 0.15);
+}
+
+.conv-controls {
+    padding: 0 16px 16px;
+}
+
+.conv-listen {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+.conv-play-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 1.05rem;
+}
+
+.conv-sep-v {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+}
+
+.conv-rate {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.conv-rate option {
+    background: var(--card-bg);
+}
+
+.conv-item-date {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-right: 10px;
+}
+
+.conv-item-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+}
+
+.conv-item-locked {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.conv-anim {
+    animation: convFadeIn 0.35s ease;
+}
+
+@keyframes convFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
 }

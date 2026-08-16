@@ -201,26 +201,114 @@
                             <div class="stat-label">Total Sessions</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value" id="expressionTimer">5:00</div>
-                            <div class="stat-label">Time Left</div>
+                            <div class="stat-value" id="expressionDone">0/0</div>
+                            <div class="stat-label">Conversations</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="expressionTimer">0:00</div>
+                            <div class="stat-label">Time</div>
                         </div>
                     </div>
 
-                    <div class="text-center">
-                        <img id="expressionImage" class="expression-image" src="" alt="Practice Image">
-                        <div class="word-display" id="expressionWords">Click refresh to start</div>
-                        
-                        <div class="mt-4">
-                            <button class="btn btn-gradient me-2" onclick="refreshExpression()">
-                                <i class="fas fa-sync me-2"></i>Refresh
-                            </button>
-                            <button class="btn btn-success-gradient me-2" onclick="nextExpressionWord()">
-                                <i class="fas fa-forward me-2"></i>Next Word
-                            </button>
-                            <button class="btn btn-outline-light" id="pauseBtn" onclick="pauseExpression()">
-                                <i class="fas fa-pause me-2"></i>Pause
-                            </button>
+                    <!-- 1. Conversation picker -->
+                    <div id="convPicker">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <small style="color: var(--text-muted);">
+                                Translate every line from French into Modern Standard Arabic.
+                                Oldest conversation first.
+                            </small>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-gradient btn-sm" onclick="continueConversations()">
+                                    <i class="fas fa-play me-2"></i>Continue
+                                </button>
+                                <button class="btn btn-sm" onclick="resetConversationProgress()"
+                                    style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light); opacity: 0.6;">
+                                    <i class="fas fa-rotate-left me-1"></i>Reset progress
+                                </button>
+                            </div>
                         </div>
+                        <div id="convList" class="list-group"></div>
+                    </div>
+
+                    <!-- 2. Immersive stage -->
+                    <div id="convIntroWrap" class="conv-intro" style="display: none;">
+                        <p class="conv-intro-label"><i class="fas fa-circle-info me-1"></i>Context</p>
+                        <p id="convIntro" class="conv-intro-text"></p>
+                    </div>
+
+                    <div id="convStage" class="conv-stage" style="display: none;">
+                        <div class="conv-bar">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="live-dot"></span>
+                                <span class="conv-bar-label">Live</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span id="convCounter" class="conv-bar-mono">1/1</span>
+                                <button id="convReplayBtn" class="conv-icon-btn" onclick="replayConvAudio()" title="Replay audio">
+                                    <i class="fas fa-rotate-right"></i>
+                                </button>
+                                <button class="conv-icon-btn" onclick="quitConversation()" title="Back to the list">
+                                    <i class="fas fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p id="convPrev" class="conv-prev"></p>
+                        <div class="conv-sep"></div>
+
+                        <div class="conv-body">
+                            <p id="convSpeaker" class="conv-speaker"></p>
+                            <p id="convFr" class="conv-fr"></p>
+                            <p id="convAr" class="conv-ar" dir="rtl" lang="ar"></p>
+                        </div>
+
+                        <div class="conv-controls">
+                            <div id="convActionArea">
+                                <button id="convActionBtn" class="btn btn-gradient w-100"></button>
+                            </div>
+                            <div id="convListenControls" class="conv-listen" style="display: none;">
+                                <button class="conv-icon-btn" onclick="convPlayerPrev()" title="Previous">
+                                    <i class="fas fa-backward-step"></i>
+                                </button>
+                                <button class="conv-play-btn" onclick="convPlayerToggle()">
+                                    <i id="convPauseIcon" class="fas fa-pause"></i>
+                                </button>
+                                <button class="conv-icon-btn" onclick="convPlayerNext()" title="Next">
+                                    <i class="fas fa-forward-step"></i>
+                                </button>
+                                <span class="conv-sep-v"></span>
+                                <select class="conv-rate" onchange="convPlayerRate(this.value)">
+                                    <option value="0.6">0.6×</option>
+                                    <option value="0.75">0.75×</option>
+                                    <option value="0.9" selected>0.9×</option>
+                                    <option value="1">1×</option>
+                                    <option value="1.25">1.25×</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Listen / done -->
+                    <div id="convListenWrap" class="text-center mt-4" style="display: none;">
+                        <button class="btn btn-success-gradient" onclick="playWholeConversation()">
+                            <i class="fas fa-headphones me-2"></i>Listen to the whole conversation
+                        </button>
+                        <p class="mt-2" style="color: var(--text-muted); font-size: 0.85rem;">
+                            All lines translated. Listen once before moving on.
+                        </p>
+                    </div>
+
+                    <div id="convDoneWrap" class="text-center mt-4" style="display: none;">
+                        <p style="color: var(--success-color); font-size: 1.1rem;">
+                            <i class="fas fa-circle-check me-2"></i>Conversation completed
+                        </p>
+                        <button class="btn btn-gradient" onclick="continueConversations()">
+                            <i class="fas fa-forward me-2"></i>Next conversation
+                        </button>
+                        <button class="btn btn-sm ms-2" onclick="quitConversation()"
+                            style="background: transparent; border: 1px solid var(--border-color); color: var(--text-light);">
+                            Back to the list
+                        </button>
                     </div>
                 </div>
             </div>
@@ -411,6 +499,7 @@
     </div>
 
     <script src="js/data/arabic-words.js"></script>
+    <script src="js/data/conversations.js"></script>
     <script src="js/data/language-data.js"></script>
     <script src="js/core.js"></script>
     <script src="js/audio.js"></script>

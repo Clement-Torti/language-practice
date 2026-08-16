@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the app
     createWordLists();
     updateAllStats();
+    renderConversationList();
 });
 
 function updateAllStats() {
