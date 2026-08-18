@@ -10,15 +10,10 @@ let speakingTimerInterval = null;
 let speakingNoCount = false; // true when session should not increment the counter
 
 async function startSpeakingPractice() {
+    // Les phrases ne viennent plus de Gemini : la clé n'est plus obligatoire ici.
+    // Elle reste utile pour "Fix translation" et "Replace sentence", donc on la garde.
     const apiKey = document.getElementById('geminiApiKey').value.trim();
-
-    if (!apiKey) {
-        alert('Please enter your Google Gemini API key');
-        return;
-    }
-
-    // Save API key to localStorage
-    localStorage.setItem('gemini_api_key', apiKey);
+    if (apiKey) localStorage.setItem('gemini_api_key', apiKey);
 
     // Show loading indicator
     document.getElementById('speakingControls').style.display = 'none';
@@ -47,8 +42,15 @@ async function startSpeakingPractice() {
         // Drop sentences past their last review (> 19 challenges since introduction)
         const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= 19);
 
-        // Generate 10 new sentences for this session
-        const newSentences = await generateSentences(apiKey, 10);
+        // 10 nouvelles phrases tirées au hasard dans les conversations d'Expression
+        // (ancienne version : const newSentences = await generateSentences(apiKey, 10);)
+        const newSentences = pickSentencesFromConversations(10);
+
+        if (newSentences.length === 0) {
+            alert('No translated conversation available yet. Translate some in the Expression tab first.');
+            resetSpeakingPractice();
+            return;
+        }
         const todaySentences = newSentences.map(s => ({ ...s, date: currentCount, reviewDay: 1 }));
 
         // Sentences from history due this session (diff > 0 to exclude this session's new batch)
@@ -160,6 +162,13 @@ async function startSpeakingPracticeNoGenerate() {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Génération via Gemini — conservée mais désactivée.
+// Les phrases proviennent désormais de pickSentencesFromConversations().
+// Pour revenir à Gemini : décommenter ce bloc et restaurer l'appel dans
+// startSpeakingPractice(), ainsi que le contrôle de la clé API.
+// ─────────────────────────────────────────────────────────────────────────────
+/*
 async function generateSentences(apiKey, count) {
     const words = getCurrentLanguageData().words;
 
@@ -242,6 +251,7 @@ Do NOT include any other text, explanations, or formatting. ONLY the sentences i
 
     return sentences;
 }
+*/
 
 function parseSentences(text, expectedCount) {
     const sentences = [];
