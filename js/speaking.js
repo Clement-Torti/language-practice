@@ -9,15 +9,18 @@ let speakingHistory = []; // mirrors exactly what's saved in localStorage
 let speakingTimerInterval = null;
 let speakingNoCount = false; // true when session should not increment the counter
 
-// Calendrier de révision espacée : une phrase revient aux séances 1, 3, 8, 15 et 30
+// Calendrier de révision espacée : une phrase revient aux séances 1, 4, 15 et 30
 // après son introduction. REVIEW_OFFSETS = ces séances moins un (0 = la séance
 // d'introduction elle-même). Défini ici une seule fois : les trois écrans qui
 // s'en servent lisent ces constantes.
-const REVIEW_DAYS = [1, 3, 8, 15, 30];
+const REVIEW_DAYS = [1, 4, 15, 30];
 const REVIEW_OFFSETS = REVIEW_DAYS.map(day => day - 1);
 const OFFSET_TO_DAY = Object.fromEntries(REVIEW_OFFSETS.map((offset, i) => [offset, REVIEW_DAYS[i]]));
 // Au-delà de la dernière révision, la phrase sort de l'historique.
 const REVIEW_LAST_OFFSET = REVIEW_OFFSETS[REVIEW_OFFSETS.length - 1];
+
+// Nombre maximum de phrases affichées dans une séance.
+const SESSION_TARGET = 40;
 
 async function startSpeakingPractice() {
     // Les phrases ne viennent plus de Gemini : la clé n'est plus obligatoire ici.
@@ -31,7 +34,6 @@ async function startSpeakingPractice() {
     document.getElementById('loadingIndicator').style.display = 'block';
 
     try {
-        const TARGET = 50;
 
         // Current challenge counter (incremented at session end)
         const currentCount = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
@@ -76,8 +78,8 @@ async function startSpeakingPractice() {
             .map(s => ({ ...s, reviewDay: 0 }))
             .sort(() => Math.random() - 0.5);
 
-        // Build display: new → due → random filler, capped at TARGET, then shuffle
-        const displayPool = [...todaySentences, ...dueSentences, ...filler].slice(0, TARGET);
+        // Build display: new → due → random filler, capped at SESSION_TARGET, then shuffle
+        const displayPool = [...todaySentences, ...dueSentences, ...filler].slice(0, SESSION_TARGET);
         speakingSentences = displayPool.sort(() => Math.random() - 0.5);
 
         // Save: active history + this session's new sentences
@@ -111,7 +113,6 @@ async function startSpeakingPracticeNoGenerate() {
     document.getElementById('speakingContent').style.display = 'block';
 
     try {
-        const TARGET = 50;
 
         const currentCount = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
 
@@ -145,7 +146,7 @@ async function startSpeakingPracticeNoGenerate() {
             .map(s => ({ ...s, reviewDay: 0 }))
             .sort(() => Math.random() - 0.5);
 
-        const displayPool = [...dueSentences, ...filler].slice(0, TARGET);
+        const displayPool = [...dueSentences, ...filler].slice(0, SESSION_TARGET);
         speakingSentences = displayPool.sort(() => Math.random() - 0.5);
 
         speakingHistory = activeHistory;
