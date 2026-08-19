@@ -9,6 +9,16 @@ let speakingHistory = []; // mirrors exactly what's saved in localStorage
 let speakingTimerInterval = null;
 let speakingNoCount = false; // true when session should not increment the counter
 
+// Calendrier de révision espacée : une phrase revient aux séances 1, 3, 8, 15 et 30
+// après son introduction. REVIEW_OFFSETS = ces séances moins un (0 = la séance
+// d'introduction elle-même). Défini ici une seule fois : les trois écrans qui
+// s'en servent lisent ces constantes.
+const REVIEW_DAYS = [1, 3, 8, 15, 30];
+const REVIEW_OFFSETS = REVIEW_DAYS.map(day => day - 1);
+const OFFSET_TO_DAY = Object.fromEntries(REVIEW_OFFSETS.map((offset, i) => [offset, REVIEW_DAYS[i]]));
+// Au-delà de la dernière révision, la phrase sort de l'historique.
+const REVIEW_LAST_OFFSET = REVIEW_OFFSETS[REVIEW_OFFSETS.length - 1];
+
 async function startSpeakingPractice() {
     // Les phrases ne viennent plus de Gemini : la clé n'est plus obligatoire ici.
     // Elle reste utile pour "Fix translation" et "Replace sentence", donc on la garde.
@@ -21,8 +31,6 @@ async function startSpeakingPractice() {
     document.getElementById('loadingIndicator').style.display = 'block';
 
     try {
-        const REVIEW_OFFSETS = [0, 1, 3, 6, 19]; // challenges after intro a sentence is due
-        const OFFSET_TO_DAY = { 0: 1, 1: 2, 3: 4, 6: 7, 19: 20 };
         const TARGET = 50;
 
         // Current challenge counter (incremented at session end)
@@ -39,8 +47,8 @@ async function startSpeakingPractice() {
             if (!seenFrench.has(s.french) || s.date < seenFrench.get(s.french).date) seenFrench.set(s.french, s);
         });
 
-        // Drop sentences past their last review (> 19 challenges since introduction)
-        const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= 19);
+        // Drop sentences past their last review (see REVIEW_DAYS)
+        const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= REVIEW_LAST_OFFSET);
 
         // 10 nouvelles phrases tirées au hasard dans les conversations d'Expression
         // (ancienne version : const newSentences = await generateSentences(apiKey, 10);)
@@ -103,8 +111,6 @@ async function startSpeakingPracticeNoGenerate() {
     document.getElementById('speakingContent').style.display = 'block';
 
     try {
-        const REVIEW_OFFSETS = [0, 1, 3, 6, 19];
-        const OFFSET_TO_DAY = { 0: 1, 1: 2, 3: 4, 6: 7, 19: 20 };
         const TARGET = 50;
 
         const currentCount = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
@@ -118,7 +124,7 @@ async function startSpeakingPracticeNoGenerate() {
             if (!seenFrench.has(s.french) || s.date < seenFrench.get(s.french).date) seenFrench.set(s.french, s);
         });
 
-        const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= 19);
+        const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= REVIEW_LAST_OFFSET);
 
         if (activeHistory.length === 0) {
             alert('No saved sentences found. Use "Start Practice" to generate new sentences first.');
@@ -495,8 +501,6 @@ function confirmImportSpeakingHistory() {
 function openSentenceInspector() {
     const key = getStorageKey('speaking_history');
     const currentCount = parseInt(getLocalStorageValue(getStorageKey('speaking'))) || 0;
-    const OFFSET_TO_DAY = { 0: 1, 1: 2, 3: 4, 6: 7, 19: 20 };
-    const REVIEW_OFFSETS = [0, 1, 3, 6, 19];
 
     const raw = JSON.parse(localStorage.getItem(key) || '[]');
     const sentences = raw.map(s => typeof s.date === 'number' ? s : { ...s, date: currentCount - 2 });
@@ -515,7 +519,7 @@ function openSentenceInspector() {
         .sort((a, b) => a.date - b.date)
         .map(s => {
             const diff = currentCount - s.date;
-            const label = OFFSET_TO_DAY[diff] != null ? `J${OFFSET_TO_DAY[diff]}` : (diff > 19 ? 'expired' : `filler (${diff})`);
+            const label = OFFSET_TO_DAY[diff] != null ? `J${OFFSET_TO_DAY[diff]}` : (diff > REVIEW_LAST_OFFSET ? 'expired' : `filler (${diff})`);
             const next = nextReview(s.date);
             return `<div style="border-bottom:1px solid var(--border-color); padding:8px 0; font-size:0.85rem;">
                 <div style="display:flex; justify-content:space-between; gap:8px;">
