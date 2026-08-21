@@ -19,8 +19,10 @@ const OFFSET_TO_DAY = Object.fromEntries(REVIEW_OFFSETS.map((offset, i) => [offs
 // Au-delà de la dernière révision, la phrase sort de l'historique.
 const REVIEW_LAST_OFFSET = REVIEW_OFFSETS[REVIEW_OFFSETS.length - 1];
 
-// Nombre maximum de phrases affichées dans une séance.
-const SESSION_TARGET = 40;
+// Nouvelles phrases tirées à chaque séance, et plafond de phrases affichées
+// (12 nouvelles × 4 passages de révision = 48).
+const NEW_PER_SESSION = 12;
+const SESSION_TARGET = 48;
 
 async function startSpeakingPractice() {
     // Les phrases ne viennent plus de Gemini : la clé n'est plus obligatoire ici.
@@ -52,9 +54,9 @@ async function startSpeakingPractice() {
         // Drop sentences past their last review (see REVIEW_DAYS)
         const activeHistory = Array.from(seenFrench.values()).filter(s => currentCount - s.date <= REVIEW_LAST_OFFSET);
 
-        // 10 nouvelles phrases tirées au hasard dans les conversations d'Expression
-        // (ancienne version : const newSentences = await generateSentences(apiKey, 10);)
-        const newSentences = pickSentencesFromConversations(10);
+        // Nouvelles phrases tirées au hasard dans les conversations d'Expression
+        // (ancienne version : const newSentences = await generateSentences(apiKey, NEW_PER_SESSION);)
+        const newSentences = pickSentencesFromConversations(NEW_PER_SESSION);
 
         if (newSentences.length === 0) {
             alert('No translated conversation available yet. Translate some in the Expression tab first.');
